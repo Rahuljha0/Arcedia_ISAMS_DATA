@@ -1,6 +1,7 @@
 import { sequelize } from "../config/db.js";
 import { Student } from "./student.model.js";
 import { Withdrawal } from "./withdrawal.model.js";
+import { Metadata } from "./metadata.model.js";
 
 export const initModels = async () => {
   try {
@@ -11,4 +12,4 @@ export const initModels = async () => {
   }
 };
 
-export { Student, Withdrawal };
+export { Student, Withdrawal, Metadata };

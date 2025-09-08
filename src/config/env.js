@@ -5,9 +5,9 @@ export const config = {
   clientApi: {
     clientId: process.env.ISAMS_CLIENT_ID,
     clientSecret: process.env.ISAMS_CLIENT_SECRET,
-    accessTokenUrl: "",
-    enrollmentUrl: "",
-    withdrawalsUrl: "",
+    accessTokenUrl: "https://arcadiaschool.isamshosting.cloud/auth/connect/token",
+    enrollmentUrl: "https://arcadiaschool.isamshosting.cloud/Main/api/students",
+    withdrawalsUrl: "https://arcadiaschool.isamshosting.cloud/api/alumni",
   },
   zohoApi: {
     addUrl: "",
