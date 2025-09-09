@@ -3,6 +3,7 @@ import { connectDB } from "./config/db.js";
 import { initModels } from "./models/index.js";
 import { SyncStudents } from "./jobs/studentSync.job.js";
 import { SyncWithdrawal } from "./jobs/withdrawalSync.job.js";
+import { zohoService } from "./services/zoho.service.js";
 
 const app = express();
 
@@ -15,8 +16,8 @@ const app = express();
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.get("/sync", (req, res) => {
-  SyncWithdrawal().then((students) => {
-    res.json(students);
+  zohoService.getAccessToken().then((token) => {
+    res.json(token);
   });
 });
 
