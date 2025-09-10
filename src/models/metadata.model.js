@@ -18,10 +18,6 @@ export const Metadata = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true, // last updated in source system we processed
     },
-    syncedAt: {
-      type: DataTypes.DATE,
-      allowNull: true, // when we synced to Zoho
-    },
   },
   {
     tableName: "metadata",

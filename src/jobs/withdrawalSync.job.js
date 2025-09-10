@@ -4,17 +4,23 @@ import { arcadiaApi } from "../services/arcadia.service.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoService } from "../services/zoho.service.js";
 import { config } from "../config/env.js";
-import { Withdrawal } from "../models/withdrawal.model.js";
 
+/**
+ * SyncWithdrawal
+ * ------------
+ * Fetches student withdrawal records from Arcadia API,
+ * filters unsynced records based on `lastUpdated`,
+ * and upserts them into Zoho Analytics.
+ */
 export const SyncWithdrawal = async () => {  
   logger.info("Syncing withdrawals...");
 
   let page = 1;
   let pageSize = 300;
-  let expand = 'customFields';
   let withdrawals = [];
+  let expand = "customFields";
   
-  // fetch all withdrawals from Arcadia API in pages
+  // Fetch withdrawals from Arcadia API in a paginated loop
   while (true) {
     const params = { page, pageSize, expand };
     const response = await arcadiaApi.getWithdrawals(params);
@@ -26,34 +32,47 @@ export const SyncWithdrawal = async () => {
     page++;
   }
 
-  // sort withdrawals by lastUpdated in ascending order
+  // Sort withdrawals by lastUpdated (oldest → newest)
   withdrawals.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
+  
+  // Keep only withdrawals updated after the last sync
+  const lastUpdated = await metadataService.getWithdrawalLastUpdated();
+  withdrawals = withdrawals.filter(
+    (withdrawal) => new Date(withdrawal.lastUpdated) > new Date(lastUpdated)
+  );
 
-  // filter withdrawals that are not synced by lastUpdated
-  const lastUpdated = await metadataService.getWithdrawalLastUpdated()
-  withdrawals = withdrawals.filter((withdrawal) => new Date(withdrawal.lastUpdated) > new Date(lastUpdated));
+  // prefix fullName (useful for testing/demo environments)
+  if (config.zohoApi.fullNamePrefix) {
+    withdrawals = withdrawals.map((withdrawal) => {
+      withdrawal.fullName = `${config.zohoApi.fullNamePrefix} ${withdrawal.fullName}`;
+      return withdrawal;
+    });
+  }
 
-  // sync withdrawals to Zoho
+  logger.info(`Syncing ${withdrawals.length} withdrawals...`);
+
+  // Generate Zoho access token (required for upsert calls)
+  const token = await zohoService.getAccessToken();
+  if (!token) return null;
+
+  // Upsert each withdrawal into Zoho and update metadata
+  let success = 0;
   for (const withdrawal of withdrawals) {
-    const existing = await Withdrawal.findOne({ where: { personId: withdrawal.personId } });
-
-    if (!existing) {
-      await Withdrawal.create(withdrawal);
-      await zohoService.addWithdrawal(withdrawal);
-      await metadataService.createOrUpdate("withdrawal", withdrawal.lastUpdated);
-    } else {
-      await Withdrawal.update(withdrawal, { where: { personId: withdrawal.personId } });
-      await zohoService.updateWithdrawal(withdrawal);
-      await metadataService.createOrUpdate("withdrawal", withdrawal.lastUpdated);
+    if(await zohoService.upsertWithdrawal(token, withdrawal)) {
+      await metadataService.upsertWithdrawal(withdrawal.lastUpdated);
+      success++;
     }
   }
 
-  logger.info("Synced withdrawals successfully");
-  return withdrawals.length;
+  logger.info(`Synced ${success} withdrawals successfully`);
+  return success;
 };
 
-// Run every 15 minutes
-// cron.schedule(config.cronSchedule, async () => {
-//   logger.info("Running scheduled SyncWithdrawal job...");
-//   await SyncWithdrawal();
-// });
+// Runs SyncWithdrawal() on the configured cron schedule
+export const startWithdrawalSyncJob = () => {
+  logger.info(`Starting withdrawal sync job with schedule: ${config.cronSchedule}`);
+  cron.schedule(config.cronSchedule, async () => {
+    logger.info("Running scheduled sync job...");
+    await SyncWithdrawal();
+  });
+};

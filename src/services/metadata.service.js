@@ -2,22 +2,21 @@ import { Metadata } from "../models/metadata.model.js";
 import logger from "../utils/logger.js";
 
 export const metadataService = {
-  createOrUpdate: async (recordType, lastUpdatedAt) => {
+  upsert: async (recordType, lastUpdatedAt) => {
     try {
       const [record, created] = await Metadata.findOrCreate({
         where: { recordType },
-        defaults: { lastUpdatedAt, syncedAt: new Date() },
+        defaults: { lastUpdatedAt },
       });
 
       if (!created) {
         record.lastUpdatedAt = lastUpdatedAt;
-        record.syncedAt = new Date();
         await record.save();
       }
 
       return record;
     } catch (err) {
-      logger.error(`Error in createOrUpdate metadata (${recordType}):`, err);
+      logger.error(`Error in upsert metadata (${recordType}):`, err);
       throw err;
     }
   },
@@ -32,6 +31,8 @@ export const metadataService = {
     }
   },
   
+  upsertEnrollment: async (lastUpdatedAt) => metadataService.upsert("enrollment", lastUpdatedAt),
+  upsertWithdrawal: async (lastUpdatedAt) => metadataService.upsert("withdrawal", lastUpdatedAt),
   getEnrollmentLastUpdated: async () => metadataService.getLastUpdated("enrollment"),
   getWithdrawalLastUpdated: async () => metadataService.getLastUpdated("withdrawal"),
 };

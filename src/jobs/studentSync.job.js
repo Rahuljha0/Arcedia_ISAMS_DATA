@@ -1,11 +1,17 @@
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { arcadiaApi } from "../services/arcadia.service.js";
-import { Student } from "../models/student.model.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoService } from "../services/zoho.service.js";
 import { config } from "../config/env.js";
 
+/**
+ * SyncStudents
+ * ------------
+ * Fetches student enrollment records from Arcadia API,
+ * filters unsynced records based on `lastUpdated`,
+ * and upserts them into Zoho Analytics.
+ */
 export const SyncStudents = async () => {  
   logger.info("Syncing students...");
 
@@ -13,7 +19,7 @@ export const SyncStudents = async () => {
   let pageSize = 300;
   let students = [];
   
-  // fetch all students from Arcadia API in pages
+  // Fetch students from Arcadia API in a paginated loop
   while (true) {
     const params = { page, pageSize };
     const response = await arcadiaApi.getEnrollmentStudents(params);
@@ -25,34 +31,47 @@ export const SyncStudents = async () => {
     page++;
   }
 
-  // sort students by lastUpdated in ascending order
+  // Sort students by lastUpdated (oldest → newest)
   students.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
+  
+  // Keep only students updated after the last sync
+  const lastUpdated = await metadataService.getEnrollmentLastUpdated();
+  students = students.filter(
+    (student) => new Date(student.lastUpdated) > new Date(lastUpdated)
+  );
 
-  // filter students that are not synced by lastUpdated
-  const lastUpdated = await metadataService.getEnrollmentLastUpdated()
-  students = students.filter((student) => new Date(student.lastUpdated) > new Date(lastUpdated));
+  // prefix fullName (useful for testing/demo environments)
+  if (config.zohoApi.fullNamePrefix) {
+    students = students.map((student) => {
+      student.fullName = `${config.zohoApi.fullNamePrefix} ${student.fullName}`;
+      return student;
+    });
+  }
 
-  // sync students to Zoho
+  logger.info(`Syncing ${students.length} students...`);
+
+  // Generate Zoho access token (required for upsert calls)
+  const token = await zohoService.getAccessToken();
+  if (!token) return null;
+
+  // Upsert each student into Zoho and update metadata
+  let success = 0;
   for (const student of students) {
-    const existing = await Student.findOne({ where: { id: student.id } });
-
-    if (!existing) {
-      await Student.create(student);
-      await zohoService.addStudent(student);
-      await metadataService.createOrUpdate("enrollment", student.lastUpdated);
-    } else {
-      await Student.update(student, { where: { id: student.id } });
-      await zohoService.updateStudent(student);
-      await metadataService.createOrUpdate("enrollment", student.lastUpdated);
+    if(await zohoService.upsertEnrollment(token, student)) {
+      await metadataService.upsertEnrollment(student.lastUpdated);
+      success++;
     }
   }
 
-  logger.info("Synced students successfully");
-  return students.length;
+  logger.info(`Synced ${success} students successfully`);
+  return success;
 };
 
-// Run every 15 minutes
-// cron.schedule(config.cronSchedule, async () => {
-//   logger.info("Running scheduled sync job...");
-//   await SyncStudents();
-// });
+// Runs SyncStudents() on the configured cron schedule
+export const startStudentSyncJob = () => {
+  logger.info(`Starting student sync job with schedule: ${config.cronSchedule}`);
+  cron.schedule(config.cronSchedule, async () => {
+    logger.info("Running scheduled sync job...");
+    await SyncStudents();
+  });
+};

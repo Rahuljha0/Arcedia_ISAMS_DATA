@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+import { parseCronInterval } from "../utils/helpers.js";
 
 export const config = {
   clientApi: {
@@ -14,14 +15,10 @@ export const config = {
     clientSecret: process.env.ZOHO_CLIENT_SECRET,
     refreshToken: process.env.ZOHO_REFRESH_TOKEN,
     orgId: process.env.ZOHO_ORG_ID,
-    workspaceId: process.env.ZOHO_WORKSPACE_ID,
-    enrollmentViewId: process.env.ZOHO_ENROLLMENT_VIEW_ID,
-    withdrawalViewId: process.env.ZOHO_WITHDRAWAL_VIEW_ID,
+    fullNamePrefix: process.env.ZOHO_FULL_NAME_PREFIX,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
-    addEnrollmentUrl: "",
-    updateEnrollmentUrl: "",
-    addWithdrawalUrl: "",
-    updateWithdrawalUrl: "",
+    upsertEnrollmentUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_ENROLLMENT_VIEW_ID}/rows`,
+    upsertWithdrawalUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_WITHDRAWAL_VIEW_ID}/rows`,
   },
   db: {
     name: process.env.DB_NAME,
@@ -29,5 +26,5 @@ export const config = {
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
   },
-  cronSchedule: "*/15 * * * *", // run every 15 minutes
+  cronSchedule: parseCronInterval(process.env.CRON_INTERVAL),
 };

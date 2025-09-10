@@ -1,6 +1,7 @@
 import { http } from "../utils/http.js";
 import { config } from "../config/env.js";
 import logger from "../utils/logger.js";
+import FormData from "form-data";
 
 export const zohoService = {
   getAccessToken: async () => {
@@ -15,43 +16,66 @@ export const zohoService = {
       });
       return res.data.access_token;
     } catch (err) {
-      console.error("Error getting access token:", err.response?.data || err.message);
+      logger.error("Error getting access token:", err.response?.data || err.message);
       throw err;
     }
   },
-  addStudent: async (student) => {
+
+  upsertEnrollment: async (token, student) => {
     try {
-      const created = await http.post(config.zohoApi.addEnrollmentUrl, { data: student });
-      return created;
+      const formdata = new FormData();
+      formdata.append(
+        "CONFIG",
+        JSON.stringify({
+          criteria: `"id"='${student.id}'`,
+          addIfNotExist: true,
+          columns: student,
+        })
+      );
+
+      const headers = {
+        ...formdata.getHeaders(),
+        "ZANALYTICS-ORGID": config.zohoApi.orgId,
+        Authorization: `Zoho-oauthtoken ${token}`,
+      };
+
+      const updated = await http.put(
+        config.zohoApi.upsertEnrollmentUrl,
+        formdata,
+        { headers }
+      );
+
+      return updated.data;
     } catch (err) {
-      logger.error("Zoho Add Error", err.response?.data || err.message);
+      logger.error("Zoho Enrollment Error", err.response?.data || err.message);
       return null;
     }
   },
-  updateStudent: async (student) => {
+
+  upsertWithdrawal: async (token, withdrawal) => {
     try {
-      const updated = await http.post(config.zohoApi.updateEnrollmentUrl, { criteria: `(personId=${student.personId})`, data: student });
-      return updated;
+      const formdata = new FormData();
+      formdata.append(
+        "CONFIG",
+        JSON.stringify({
+          criteria: `"personId"='${withdrawal.personId}'`,
+          addIfNotExist: true,
+          columns: withdrawal,
+        })
+      );
+
+      const headers = {
+        ...formdata.getHeaders(),
+        "ZANALYTICS-ORGID": config.zohoApi.orgId,
+        Authorization: `Zoho-oauthtoken ${token}`,
+      };
+
+      const updated = await http.put(config.zohoApi.upsertWithdrawalUrl, formdata, {
+        headers,
+      });
+      return updated.data;
     } catch (err) {
-      logger.error("Zoho Update Error", err.response?.data || err.message);
-      return null;
-    }
-  },
-  addWithdrawal: async (withdrawal) => {
-    try {
-      const created = await http.post(config.zohoApi.addWithdrawalUrl, { data: withdrawal });
-      return created;
-    } catch (err) {
-      logger.error("Zoho Add Error", err.response?.data || err.message);
-      return null;
-    }
-  },
-  updateWithdrawal: async (withdrawal) => {
-    try {
-      const updated = await http.post(config.zohoApi.updateWithdrawalUrl, { criteria: `(personId=${withdrawal.personId})`, data: withdrawal });
-      return updated;
-    } catch (err) {
-      logger.error("Zoho Update Error", err.response?.data || err.message);
+      logger.error("Zoho Withdrawal Error", err.response?.data || err.message);
       return null;
     }
   },
