@@ -41,6 +41,12 @@ export const SyncWithdrawal = async () => {
     (withdrawal) => new Date(withdrawal.lastUpdated) > new Date(lastUpdated)
   );
 
+  // If no new withdrawals to sync, return
+  if(withdrawals.length === 0) {
+    logger.info("No new withdrawals to sync");
+    return 0;
+  }
+
   // prefix fullName (useful for testing/demo environments)
   if (config.zohoApi.fullNamePrefix) {
     withdrawals = withdrawals.map((withdrawal) => {
@@ -51,17 +57,11 @@ export const SyncWithdrawal = async () => {
 
   logger.info(`Syncing ${withdrawals.length} withdrawals...`);
 
-  // Generate Zoho access token (required for upsert calls)
-  const token = await zohoService.getAccessToken();
-  if (!token) return null;
-
   // Upsert each withdrawal into Zoho and update metadata
   let success = 0;
-  for (const withdrawal of withdrawals) {
-    if(await zohoService.upsertWithdrawal(token, withdrawal)) {
-      await metadataService.upsertWithdrawal(withdrawal.lastUpdated);
-      success++;
-    }
+  if(await zohoService.upsertWithdrawals(withdrawals)) {
+    await metadataService.upsertWithdrawal(withdrawals[withdrawals.length - 1].lastUpdated);
+    success = withdrawals.length;
   }
 
   logger.info(`Synced ${success} withdrawals successfully`);

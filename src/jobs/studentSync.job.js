@@ -40,6 +40,12 @@ export const SyncStudents = async () => {
     (student) => new Date(student.lastUpdated) > new Date(lastUpdated)
   );
 
+  // If no new students to sync, return
+  if(students.length === 0) {
+    logger.info("No new students to sync");
+    return 0;
+  }
+
   // prefix fullName (useful for testing/demo environments)
   if (config.zohoApi.fullNamePrefix) {
     students = students.map((student) => {
@@ -50,17 +56,11 @@ export const SyncStudents = async () => {
 
   logger.info(`Syncing ${students.length} students...`);
 
-  // Generate Zoho access token (required for upsert calls)
-  const token = await zohoService.getAccessToken();
-  if (!token) return null;
-
   // Upsert each student into Zoho and update metadata
   let success = 0;
-  for (const student of students) {
-    if(await zohoService.upsertEnrollment(token, student)) {
-      await metadataService.upsertEnrollment(student.lastUpdated);
-      success++;
-    }
+  if(await zohoService.upsertEnrollments(students)) {
+    await metadataService.upsertEnrollment(students[students.length - 1].lastUpdated);
+    success = students.length;
   }
 
   logger.info(`Synced ${success} students successfully`);

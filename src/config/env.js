@@ -17,8 +17,8 @@ export const config = {
     orgId: process.env.ZOHO_ORG_ID,
     fullNamePrefix: process.env.ZOHO_FULL_NAME_PREFIX,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
-    upsertEnrollmentUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_ENROLLMENT_VIEW_ID}/rows`,
-    upsertWithdrawalUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_WITHDRAWAL_VIEW_ID}/rows`,
+    bulkImportEnrollmentUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_ENROLLMENT_VIEW_ID}/data`,
+    bulkImportWithdrawalUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_WITHDRAWAL_VIEW_ID}/data`,
   },
   db: {
     name: process.env.DB_NAME,

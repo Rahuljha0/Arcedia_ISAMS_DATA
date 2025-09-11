@@ -21,62 +21,62 @@ export const zohoService = {
     }
   },
 
-  upsertEnrollment: async (token, student) => {
+  bulkUpsertRequest: async (url, data, matchingColumns = []) => {
+    const token = await zohoService.getAccessToken();
+    if (!token) return null;
+
+    const formdata = new FormData();
+    formdata.append("DATA", JSON.stringify(data));
+
+    const headers = {
+      ...formdata.getHeaders(),
+      "ZANALYTICS-ORGID": config.zohoApi.orgId,
+      Authorization: `Zoho-oauthtoken ${token}`,
+    };
+
+    const configJson = {
+      matchingColumns,
+      importType: "updateadd",
+      fileType: "json",
+      autoIdentify: true,
+    };
+
+    const fullUrl = `${url}?CONFIG=${encodeURIComponent(JSON.stringify(configJson))}`;
+
+    return await http.post(fullUrl, formdata, { headers });
+  },
+
+  upsertEnrollments: async (students) => {
     try {
-      const formdata = new FormData();
-      formdata.append(
-        "CONFIG",
-        JSON.stringify({
-          criteria: `"id"='${student.id}'`,
-          addIfNotExist: true,
-          columns: student,
-        })
-      );
-
-      const headers = {
-        ...formdata.getHeaders(),
-        "ZANALYTICS-ORGID": config.zohoApi.orgId,
-        Authorization: `Zoho-oauthtoken ${token}`,
-      };
-
-      const updated = await http.put(
-        config.zohoApi.upsertEnrollmentUrl,
-        formdata,
-        { headers }
-      );
-
-      return updated.data;
+      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportEnrollmentUrl, students, ["id"]);
+      logger.info("Zoho Bulk Enrollment Success", response.data);
+      return response.data;
     } catch (err) {
-      logger.error("Zoho Enrollment Error", err.response?.data || err.message);
+      logger.error("Zoho Bulk Enrollment Error", err.response?.data || err.message);
       return null;
     }
   },
 
-  upsertWithdrawal: async (token, withdrawal) => {
+  upsertWithdrawals: async (withdrawals) => {
     try {
-      const formdata = new FormData();
-      formdata.append(
-        "CONFIG",
-        JSON.stringify({
-          criteria: `"personId"='${withdrawal.personId}'`,
-          addIfNotExist: true,
-          columns: withdrawal,
-        })
-      );
+      // Extract custom fields from each withdrawal
+      const withdrawalsWithExtractedCustomFields = [...withdrawals].map((withdrawal) => {
+        const customFields = withdrawal.customFields;
+        delete withdrawal.customFields;
 
-      const headers = {
-        ...formdata.getHeaders(),
-        "ZANALYTICS-ORGID": config.zohoApi.orgId,
-        Authorization: `Zoho-oauthtoken ${token}`,
-      };
+        customFields.map((field) => {
+          withdrawal[field.name] = field.value;
+        });
 
-      const updated = await http.put(config.zohoApi.upsertWithdrawalUrl, formdata, {
-        headers,
+        return withdrawal;
       });
-      return updated.data;
+
+      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, withdrawalsWithExtractedCustomFields, ["personId"]);
+      logger.info("Zoho Bulk Withdrawal Success", response.data);
+      return response.data;
     } catch (err) {
-      logger.error("Zoho Withdrawal Error", err.response?.data || err.message);
+      logger.error("Zoho Bulk Withdrawal Error", err.response?.data || err.message);
       return null;
     }
   },
-};
+}
