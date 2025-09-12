@@ -48,7 +48,15 @@ export const zohoService = {
 
   upsertEnrollments: async (students) => {
     try {
-      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportEnrollmentUrl, students, ["id"]);
+      // Extract custom fields from each withdrawal
+      const flatStudents = [...students].map((student) => {
+        student.languages = student.languages.join(",");
+        student.nationalities = student.nationalities.join(",");
+
+        return student;
+      });
+
+      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportEnrollmentUrl, flatStudents, ["id"]);
       logger.info("Zoho Bulk Enrollment Success", response.data);
       return response.data;
     } catch (err) {
@@ -60,7 +68,7 @@ export const zohoService = {
   upsertWithdrawals: async (withdrawals) => {
     try {
       // Extract custom fields from each withdrawal
-      const withdrawalsWithExtractedCustomFields = [...withdrawals].map((withdrawal) => {
+      const flatWithdrawals = [...withdrawals].map((withdrawal) => {
         const customFields = withdrawal.customFields;
         delete withdrawal.customFields;
 
@@ -68,10 +76,13 @@ export const zohoService = {
           withdrawal[field.name.trim()] = field.value;
         });
 
+        withdrawal.languages = withdrawal.languages.join(",");
+        withdrawal.nationalities = withdrawal.nationalities.join(",");
+
         return withdrawal;
       });
 
-      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, withdrawalsWithExtractedCustomFields, ["personId"]);
+      const response = await zohoService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, flatWithdrawals, ["personId"]);
       logger.info("Zoho Bulk Withdrawal Success", response.data);
       return response.data;
     } catch (err) {
