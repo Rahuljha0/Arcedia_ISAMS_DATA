@@ -65,7 +65,7 @@ export const zohoService = {
         delete withdrawal.customFields;
 
         customFields.map((field) => {
-          withdrawal[field.name] = field.value;
+          withdrawal[field.name.trim()] = field.value;
         });
 
         return withdrawal;
