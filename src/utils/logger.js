@@ -1,3 +1,4 @@
+import axios from "axios";
 import { createLogger, format, transports } from "winston";
 
 // Function to dynamically generate log file names based on the date
@@ -86,9 +87,32 @@ const logger = createLogger({
   exitOnError: false,
 });
 
+const sendNtfy = (message, meta = []) => {
+  const formattedMessage = [
+    typeof message === "object" ? JSON.stringify(message, null, 2) : message,
+    ...meta.map((m) => JSON.stringify(m, null, 2))
+  ].join("\n");
+
+  axios
+    .post(`https://ntfy.sh/arcadia`, formattedMessage, {
+      headers: { "Content-Type": "text/plain" },
+      timeout: 3000,
+    })
+    .catch(() => {});
+};
+
 // Helper methods that accept meta args
-logger.debug = (message, ...meta) => logger.log({ level: "debug", message, ...meta });
-logger.info = (message, ...meta) => logger.log({ level: "info", message, ...meta });
-logger.error = (message, ...meta) => logger.log({ level: "error", message, ...meta });
+logger.debug = (message, ...meta) => {
+  sendNtfy(message, meta);
+  logger.log({ level: "debug", message, ...meta })
+};
+logger.info = (message, ...meta) => {
+  sendNtfy(message, meta);
+  logger.log({ level: "info", message, ...meta });
+};
+logger.error = (message, ...meta) => {
+  sendNtfy(message, meta);
+  logger.log({ level: "error", message, ...meta });
+};
 
 export default logger;

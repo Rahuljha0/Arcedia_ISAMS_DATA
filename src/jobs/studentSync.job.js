@@ -73,5 +73,7 @@ export const startStudentSyncJob = () => {
   cron.schedule(config.cronSchedule, async () => {
     logger.info("Running scheduled sync job...");
     await SyncStudents();
+  }, {
+    timezone: "Asia/Dubai"
   });
 };

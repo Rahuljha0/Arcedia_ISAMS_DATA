@@ -74,5 +74,7 @@ export const startWithdrawalSyncJob = () => {
   cron.schedule(config.cronSchedule, async () => {
     logger.info("Running scheduled sync job...");
     await SyncWithdrawal();
+  }, {
+    timezone: "Asia/Dubai"
   });
 };
