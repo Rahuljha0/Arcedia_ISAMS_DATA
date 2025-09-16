@@ -58,4 +58,22 @@ export const arcadiaApi = {
       return null;
     }
   },
+  getApplicants: async (params = {}) => {
+    const token = await arcadiaApi.getAccessToken();
+    if(!token) return null;
+
+    try {
+    const { data } = await http.get(config.clientApi.applicantsUrl, {
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },  
+      params,
+    });
+    return data;
+    } catch (err) {
+      logger.error("Arcadia Withdrawals Error", err.response?.data || err.message);
+      return null;
+    }
+  },
 };

@@ -2,7 +2,7 @@ import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { arcadiaApi } from "../services/arcadia.service.js";
 import { metadataService } from "../services/metadata.service.js";
-import { zohoService } from "../services/zoho.service.js";
+import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
 
 /**
@@ -12,8 +12,8 @@ import { config } from "../config/env.js";
  * filters unsynced records based on `lastUpdated`,
  * and upserts them into Zoho Analytics.
  */
-export const SyncStudents = async () => {  
-  logger.info("Syncing students...");
+export const SyncEnrollments = async () => {  
+  logger.info("Syncing enrollments...");
 
   let page = 1;
   let pageSize = 300;
@@ -42,7 +42,7 @@ export const SyncStudents = async () => {
 
   // If no new students to sync, return
   if(students.length === 0) {
-    logger.info("No new students to sync");
+    logger.info("No new enrollments to sync");
     return 0;
   }
 
@@ -54,25 +54,25 @@ export const SyncStudents = async () => {
     });
   }
 
-  logger.info(`Syncing ${students.length} students...`);
+  logger.info(`Syncing ${students.length} enrollments...`);
 
   // Upsert each student into Zoho and update metadata
   let success = 0;
-  if(await zohoService.upsertEnrollments(students)) {
+  if(await zohoAnalyticService.upsertEnrollments(students)) {
     await metadataService.upsertEnrollment(students[students.length - 1].lastUpdated);
     success = students.length;
   }
 
-  logger.info(`Synced ${success} students successfully`);
+  logger.info(`Synced ${success} enrollments successfully`);
   return success;
 };
 
 // Runs SyncStudents() on the configured cron schedule
-export const startStudentSyncJob = () => {
-  logger.info(`Starting student sync job with schedule: ${config.cronSchedule}`);
+export const startEnrollmentSyncJob = () => {
+  logger.info(`Starting enrollment sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
     logger.info("Running scheduled sync job...");
-    await SyncStudents();
+    await SyncEnrollments();
   }, {
     timezone: "Asia/Dubai"
   });
