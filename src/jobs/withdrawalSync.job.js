@@ -2,7 +2,7 @@ import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { arcadiaApi } from "../services/arcadia.service.js";
 import { metadataService } from "../services/metadata.service.js";
-import { zohoService } from "../services/zoho.service.js";
+import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
 
 /**
@@ -59,7 +59,7 @@ export const SyncWithdrawal = async () => {
 
   // Upsert each withdrawal into Zoho and update metadata
   let success = 0;
-  if(await zohoService.upsertWithdrawals(withdrawals)) {
+  if(await zohoAnalyticService.upsertWithdrawals(withdrawals)) {
     await metadataService.upsertWithdrawal(withdrawals[withdrawals.length - 1].lastUpdated);
     success = withdrawals.length;
   }

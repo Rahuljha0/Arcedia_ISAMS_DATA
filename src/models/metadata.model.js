@@ -10,7 +10,7 @@ export const Metadata = sequelize.define(
       autoIncrement: true,
     },
     recordType: {
-      type: DataTypes.ENUM("enrollment", "withdrawal"),
+      type: DataTypes.ENUM("enrollment", "withdrawal", "applicationForm", "prospectForm", "studentForm", "applicant"),
       allowNull: false,
       unique: true,
     },

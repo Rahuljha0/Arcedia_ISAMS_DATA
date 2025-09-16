@@ -1,15 +1,15 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
-import { config } from "../config/env.js";
+import sequelizeConfig from "./sequelizeConfig.cjs";
 
 dotenv.config();
 
 export const sequelize = new Sequelize(
-  config.db.name,
-  config.db.user,
-  config.db.password,
+  sequelizeConfig.production.database,
+  sequelizeConfig.production.username,
+  sequelizeConfig.production.password,
   {
-    host: config.db.host,
+    host: sequelizeConfig.production.host,
     dialect: "mysql",
     logging: false,
   }
