@@ -1,4 +1,5 @@
 import axios from "axios";
+import { config } from "../config/env.js";
 import { createLogger, format, transports } from "winston";
 
 // Function to dynamically generate log file names based on the date
@@ -94,7 +95,7 @@ const sendNtfy = (message, meta = []) => {
   ].join("\n");
 
   axios
-    .post(`https://ntfy.sh/arcadia`, formattedMessage, {
+    .post(`https://ntfy.sh/${config.ntfyTopic}`, formattedMessage, {
       headers: { "Content-Type": "text/plain" },
       timeout: 3000,
     })
