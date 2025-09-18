@@ -13,8 +13,6 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncApplicationForms = async () => {  
-  logger.info("Syncing application forms...");
-
   let applicationForms = await zohoCrmService.getApplicationForms();
 
   // Sort application forms by lastUpdated (oldest → newest)
@@ -49,7 +47,6 @@ export const SyncApplicationForms = async () => {
     success = applicationForms.length;
   }
 
-  logger.info(`Synced ${success} application forms successfully`);
   return success;
 };
 
@@ -57,7 +54,6 @@ export const SyncApplicationForms = async () => {
 export const startApplicationFormSyncJob = () => {
   logger.info(`Starting application form sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncApplicationForms();
   }, {
     timezone: "Asia/Dubai"

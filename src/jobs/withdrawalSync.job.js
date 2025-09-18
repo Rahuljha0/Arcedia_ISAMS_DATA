@@ -13,8 +13,6 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncWithdrawal = async () => {  
-  logger.info("Syncing withdrawals...");
-
   let page = 1;
   let pageSize = 300;
   let withdrawals = [];
@@ -64,7 +62,6 @@ export const SyncWithdrawal = async () => {
     success = withdrawals.length;
   }
 
-  logger.info(`Synced ${success} withdrawals successfully`);
   return success;
 };
 
@@ -72,7 +69,6 @@ export const SyncWithdrawal = async () => {
 export const startWithdrawalSyncJob = () => {
   logger.info(`Starting withdrawal sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncWithdrawal();
   }, {
     timezone: "Asia/Dubai"

@@ -13,8 +13,6 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncApplicant = async () => {  
-  logger.info("Syncing applicants...");
-
   let page = 1;
   let pageSize = 300;
   let applicants = [];
@@ -63,7 +61,6 @@ export const SyncApplicant = async () => {
     success = applicants.length;
   }
 
-  logger.info(`Synced ${success} applicants successfully`);
   return success;
 };
 
@@ -71,7 +68,6 @@ export const SyncApplicant = async () => {
 export const startApplicantSyncJob = () => {
   logger.info(`Starting applicant sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncApplicant();
   }, {
     timezone: "Asia/Dubai"

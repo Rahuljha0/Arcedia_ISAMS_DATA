@@ -13,8 +13,6 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncProspectForms = async () => {  
-  logger.info("Syncing prospect forms...");
-
   let prospects = await zohoCrmService.getProspectForms();
 
   // Sort prospects by lastUpdated (oldest → newest)
@@ -49,7 +47,6 @@ export const SyncProspectForms = async () => {
     success = prospects.length;
   }
 
-  logger.info(`Synced ${success} prospect forms successfully`);
   return success;
 };
 
@@ -57,7 +54,6 @@ export const SyncProspectForms = async () => {
 export const startProspectFormSyncJob = () => {
   logger.info(`Starting prospect form sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncProspectForms();
   }, {
     timezone: "Asia/Dubai"
