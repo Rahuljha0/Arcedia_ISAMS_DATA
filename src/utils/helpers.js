@@ -26,3 +26,8 @@ export const parseCronInterval = (value) => {
         return "*/15 * * * *"; // default every 15 minutes
     }
 }
+
+export const formatDateForZoho = (date) => {
+  const d = new Date(date);
+  return d.toISOString().replace(/\.\d{3}Z$/, "+00:00"); 
+};

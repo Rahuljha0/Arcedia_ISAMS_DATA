@@ -13,16 +13,8 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncProspectForms = async () => {  
-  let prospects = await zohoCrmService.getProspectForms();
-
-  // Sort prospects by lastUpdated (oldest → newest)
-  prospects.sort((a, b) => new Date(a.Modified_Time) - new Date(b.Modified_Time));
-
-  // Keep only prospects updated after the last sync
   const lastUpdated = await metadataService.getProspectFormLastUpdated();
-  prospects = prospects.filter(
-    (prospect) => new Date(prospect.Modified_Time) > new Date(lastUpdated)
-  );
+  let prospects = await zohoCrmService.getProspectForms(lastUpdated);
 
   // If no new prospects to sync, return
   if(prospects.length === 0) {

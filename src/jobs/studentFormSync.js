@@ -13,16 +13,8 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncStudentForms = async () => {  
-  let studentForms = await zohoCrmService.getStudentForms();
-
-  // Sort student forms by lastUpdated (oldest → newest)
-  studentForms.sort((a, b) => new Date(a.Modified_Time) - new Date(b.Modified_Time));
-
-  // Keep only student forms updated after the last sync
   const lastUpdated = await metadataService.getStudentFormLastUpdated();
-  studentForms = studentForms.filter(
-    (studentForm) => new Date(studentForm.Modified_Time) > new Date(lastUpdated)
-  );
+  let studentForms = await zohoCrmService.getStudentForms(lastUpdated);
 
   // If no new student forms to sync, return
   if(studentForms.length === 0) {

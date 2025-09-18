@@ -13,16 +13,8 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncApplicationForms = async () => {  
-  let applicationForms = await zohoCrmService.getApplicationForms();
-
-  // Sort application forms by lastUpdated (oldest → newest)
-  applicationForms.sort((a, b) => new Date(a.Modified_Time) - new Date(b.Modified_Time));
-
-  // Keep only application forms updated after the last sync
   const lastUpdated = await metadataService.getApplicationFormLastUpdated();
-  applicationForms = applicationForms.filter(
-    (applicationForm) => new Date(applicationForm.Modified_Time) > new Date(lastUpdated)
-  );
+  let applicationForms = await zohoCrmService.getApplicationForms(lastUpdated);
 
   // If no new application forms to sync, return
   if(applicationForms.length === 0) {
