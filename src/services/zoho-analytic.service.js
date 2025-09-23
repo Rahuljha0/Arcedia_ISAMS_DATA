@@ -102,8 +102,8 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportApplicantUrl, flatApplicants, ["personId"]);
-      logger.info("Zoho Bulk Applicant Success", response.data);
-      return response.data;
+      logger.info("Zoho Bulk Applicant Success", response);
+      return response;
     } catch (err) {
       logger.error("Zoho Bulk Applicant Error", err.response?.data || err.message);
       return null;
@@ -121,8 +121,8 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportApplicationFormUrl, flatApplicationForms, ["ID"]);
-      logger.info("Zoho Bulk Application Forms Success", response.data);
-      return response.data;
+      logger.info("Zoho Bulk Application Forms Success", response);
+      return response;
     } catch (err) {
       logger.error("Zoho Bulk Application Forms Error", err.response?.data || err.message);
       return null;
@@ -141,8 +141,8 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportProspectFormUrl, flatProspects, ["ID"]);
-      logger.info("Zoho Bulk Prospects Success", response.data);
-      return response.data;
+      logger.info("Zoho Bulk Prospects Success", response);
+      return response;
     } catch (err) {
       logger.error("Zoho Bulk Prospects Error", err.response?.data || err.message);
       return null;
@@ -165,8 +165,8 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportStudentFormUrl, flatStudentForms, ["ID"]);
-      logger.info("Zoho Bulk Student Forms Success", response.data);
-      return response.data;
+      logger.info("Zoho Bulk Student Forms Success", response);
+      return response;
     } catch (err) {
       logger.error("Zoho Bulk Student Forms Error", err.response?.data || err.message);
       return null;
