@@ -100,11 +100,11 @@ export const zohoAnalyticService = {
         return withdrawal;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, flatWithdrawals, ["personId"]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, flatWithdrawals, ["schoolId"]);
       logger.info("Zoho Bulk Withdrawal Success", response.data);
 
-      // Delete enrollments where personId is in withdrawals
-      const criteria = `("personId" IN (${flatWithdrawals.map(withdrawal => `'${withdrawal.personId}'`).join(",")}))`;
+      // Delete enrollments where schoolId is in withdrawals
+      const criteria = `("schoolId" IN (${flatWithdrawals.map(withdrawal => `'${withdrawal.schoolId}'`).join(",")}))`;
       const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(config.zohoApi.bulkDeleteEnrollmentUrl, criteria);
       logger.info("Zoho Bulk Withdrawal Delete Success from Enrollments", deleteResponse.data);
 
@@ -125,7 +125,7 @@ export const zohoAnalyticService = {
         return applicant;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportApplicantUrl, flatApplicants, ["personId"]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportApplicantUrl, flatApplicants, ["schoolId"]);
       logger.info("Zoho Bulk Applicant Success", response.data);
       return response.data;
     } catch (err) {
