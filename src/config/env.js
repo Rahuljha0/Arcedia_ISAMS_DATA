@@ -31,6 +31,7 @@ export const config = {
     bulkImportApplicationFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_APPLICATION_FORM_VIEW_ID}/data`,
     bulkImportProspectFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_PROSPECT_FORM_VIEW_ID}/data`,
     bulkImportStudentFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_STUDENT_FORM_VIEW_ID}/data`,
+    bulkDeleteEnrollmentUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_ENROLLMENT_VIEW_ID}/rows`,
   },
   cronSchedule: parseCronInterval(process.env.CRON_INTERVAL),
   ntfyTopic: process.env.NTFY_TOPIC,

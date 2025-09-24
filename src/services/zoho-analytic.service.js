@@ -21,6 +21,24 @@ export const zohoAnalyticService = {
     }
   },
 
+  bulkDeleteRequest: async (url, criteria) => {
+    const token = await zohoAnalyticService.getAccessToken();
+    if (!token) throw new Error("Failed to get access token");
+
+    const headers = {
+      "ZANALYTICS-ORGID": config.zohoApi.orgId,
+      Authorization: `Zoho-oauthtoken ${token}`,
+    };
+
+    const configJson = {
+      criteria
+    };
+
+    const fullUrl = `${url}?CONFIG=${encodeURIComponent(JSON.stringify(configJson))}`;
+
+    return await http.delete(fullUrl, { headers });
+  },
+
   bulkUpsertRequest: async (url, data, matchingColumns = []) => {
     const token = await zohoAnalyticService.getAccessToken();
     if (!token) throw new Error("Failed to get access token");
@@ -84,6 +102,12 @@ export const zohoAnalyticService = {
 
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, flatWithdrawals, ["personId"]);
       logger.info("Zoho Bulk Withdrawal Success", response.data);
+
+      // Delete enrollments where personId is in withdrawals
+      const criteria = `("personId" IN (${flatWithdrawals.map(withdrawal => `'${withdrawal.personId}'`).join(",")}))`;
+      const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(config.zohoApi.bulkDeleteEnrollmentUrl, criteria);
+      logger.info("Zoho Bulk Withdrawal Delete Success from Enrollments", deleteResponse.data);
+
       return response.data;
     } catch (err) {
       logger.error("Zoho Bulk Withdrawal Error", err.response?.data || err.message);
