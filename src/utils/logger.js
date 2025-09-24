@@ -95,7 +95,7 @@ const sendNtfy = (topic, message, meta = []) => {
   ].join("\n");
 
   axios
-    .post(`https://ntfy.sh/${config.ntfyTopic}`, formattedMessage, {
+    .post(`https://ntfy.sh/${topic}`, formattedMessage, {
       headers: { "Content-Type": "text/plain" },
       timeout: 3000,
     })
@@ -104,15 +104,15 @@ const sendNtfy = (topic, message, meta = []) => {
 
 // Helper methods that accept meta args
 logger.debug = (message, ...meta) => {
-  sendNtfy('arcadia',message, meta);
+  sendNtfy(config.ntfyTopic, message, meta);
   logger.log({ level: "debug", message, ...meta })
 };
 logger.info = (message, ...meta) => {
-  sendNtfy('arcadia',message, meta);
+  sendNtfy(config.ntfyTopic, message, meta);
   logger.log({ level: "info", message, ...meta });
 };
 logger.error = (message, ...meta) => {
-  sendNtfy('arcadia-error',message, meta);
+  sendNtfy(`${config.ntfyTopic}-error`, message, meta);
   logger.log({ level: "error", message, ...meta });
 };
 
