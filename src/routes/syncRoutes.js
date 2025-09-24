@@ -41,4 +41,15 @@ router.get("/sync/students", async (req, res) => {
   return res.status(200).json({message:"Synced students successfully", success});
 });
 
+router.get("/sync/all", async (req, res) => {
+  const success = {};
+  success.enrollments = await SyncEnrollments();
+  success.withdrawals = await SyncWithdrawal();
+  success.applicants = await SyncApplicant();
+  success.applicationForms = await SyncApplicationForms();
+  success.prospectForms = await SyncProspectForms();
+  success.students = await SyncStudentForms();
+  return res.status(200).json({message:"Synced successfully", success});
+});
+
 export default router;
