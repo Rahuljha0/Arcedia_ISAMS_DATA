@@ -87,14 +87,14 @@ const logger = createLogger({
   exitOnError: false,
 });
 
-const sendNtfy = (message, meta = []) => {
+const sendNtfy = (topic, message, meta = []) => {
   const formattedMessage = [
     typeof message === "object" ? JSON.stringify(message, null, 2) : message,
     ...meta.map((m) => JSON.stringify(m, null, 2))
   ].join("\n");
 
   axios
-    .post(`https://ntfy.sh/arcadia`, formattedMessage, {
+    .post(`https://ntfy.sh/${topic}`, formattedMessage, {
       headers: { "Content-Type": "text/plain" },
       timeout: 3000,
     })
@@ -103,15 +103,15 @@ const sendNtfy = (message, meta = []) => {
 
 // Helper methods that accept meta args
 logger.debug = (message, ...meta) => {
-  sendNtfy(message, meta);
+  sendNtfy('arcadia',message, meta);
   logger.log({ level: "debug", message, ...meta })
 };
 logger.info = (message, ...meta) => {
-  sendNtfy(message, meta);
+  sendNtfy('arcadia',message, meta);
   logger.log({ level: "info", message, ...meta });
 };
 logger.error = (message, ...meta) => {
-  sendNtfy(message, meta);
+  sendNtfy('arcadia-error',message, meta);
   logger.log({ level: "error", message, ...meta });
 };
 
