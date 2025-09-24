@@ -33,4 +33,5 @@ export const config = {
     bulkImportStudentFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_STUDENT_FORM_VIEW_ID}/data`,
   },
   cronSchedule: parseCronInterval(process.env.CRON_INTERVAL),
+  ntfyTopic: process.env.NTFY_TOPIC,
 };

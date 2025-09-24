@@ -13,18 +13,8 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncProspectForms = async () => {  
-  logger.info("Syncing prospect forms...");
-
-  let prospects = await zohoCrmService.getProspectForms();
-
-  // Sort prospects by lastUpdated (oldest → newest)
-  prospects.sort((a, b) => new Date(a.Modified_Time) - new Date(b.Modified_Time));
-
-  // Keep only prospects updated after the last sync
   const lastUpdated = await metadataService.getProspectFormLastUpdated();
-  prospects = prospects.filter(
-    (prospect) => new Date(prospect.Modified_Time) > new Date(lastUpdated)
-  );
+  let prospects = await zohoCrmService.getProspectForms(lastUpdated);
 
   // If no new prospects to sync, return
   if(prospects.length === 0) {
@@ -49,7 +39,6 @@ export const SyncProspectForms = async () => {
     success = prospects.length;
   }
 
-  logger.info(`Synced ${success} prospect forms successfully`);
   return success;
 };
 
@@ -57,7 +46,6 @@ export const SyncProspectForms = async () => {
 export const startProspectFormSyncJob = () => {
   logger.info(`Starting prospect form sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncProspectForms();
   }, {
     timezone: "Asia/Dubai"

@@ -1,6 +1,7 @@
 import { http } from "../utils/http.js";
 import { config } from "../config/env.js";
 import logger from "../utils/logger.js";
+import { formatDateForZoho } from "../utils/helpers.js";
 
 export const zohoCrmService = {
   getAccessToken: async () => {
@@ -51,15 +52,15 @@ export const zohoCrmService = {
     return data;
   },
 
-  getApplicationForms: async () => {
+  getApplicationForms: async (lastUpdated) => {
     try {
       const baseQuery = `
         select id, Name, Application_Status, First_Name, Last_Name, Year_Group, Year_of_Entry, 
                Total_Documents, Mandatory_Doc, Address, Date_of_Birth, Gender, Language, 
                Nationality, Parent, Last_Activity_Time, Modified_Time, Created_Time 
         from Application2 
-        where Name != null 
-        order by Created_Time DESC
+        where Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        order by Modified_Time ASC
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);
@@ -70,7 +71,7 @@ export const zohoCrmService = {
     }
   },
 
-  getProspectForms: async () => {
+  getProspectForms: async (lastUpdated) => {
     try {
       const baseQuery = `
         select id, Acadmic_Year, Address, Application_Form_ID, Assessment_Completed_Date, Assessment_Date, 
@@ -79,8 +80,8 @@ export const zohoCrmService = {
             Secondary_Contact_Name, Stage, Approval_Date, First_Name, Last_Name, Tour_Date, 
             Tour_Completed, Last_Activity_Time, Modified_Time , Created_Time 
         from Deals 
-        where First_Name != null 
-        order by Created_Time DESC
+        where First_Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        order by Modified_Time ASC
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);
@@ -91,7 +92,7 @@ export const zohoCrmService = {
     }
   },
 
-  getStudentForms: async () => {
+  getStudentForms: async (lastUpdated) => {
     try {
       const baseQuery = `
         select id, Current_Academic_Year, Current_Form, Current_Year_Group, Date_of_Leaving, Date_of_Notice, 
@@ -100,8 +101,8 @@ export const zohoCrmService = {
             School_Transfer_Name, Secondary_Contact_Name, Student_ID, Name, Withdrawal_Reasons, Status,  Last_Activity_Time, 
             Modified_Time , Created_Time 
         from Students 
-        where Name != null 
-        order by Created_Time DESC 
+        where Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        order by Modified_Time ASC 
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);

@@ -1,14 +1,26 @@
 import express from "express";
+import expressRateLimit from "express-rate-limit";
 import { connectDB } from "./config/db.js";
 import { initModels } from "./models/index.js";
-import { startEnrollmentSyncJob, SyncEnrollments } from "./jobs/enrollmentSync.job.js";
-import { startWithdrawalSyncJob, SyncWithdrawal } from "./jobs/withdrawalSync.job.js";
-import { startApplicantSyncJob, SyncApplicant } from "./jobs/applicantSync.job.js";
-import { startApplicationFormSyncJob, SyncApplicationForms } from "./jobs/applicationFormSync.js";
-import { startProspectFormSyncJob, SyncProspectForms } from "./jobs/prospectFormSync.js";
-import { startStudentFormSyncJob, SyncStudentForms } from "./jobs/studentFormSync.js";
+import syncRoutes from "./routes/syncRoutes.js";
+import {
+  startEnrollmentSyncJob,
+  startWithdrawalSyncJob,
+  startApplicantSyncJob,
+  startApplicationFormSyncJob,
+  startProspectFormSyncJob,
+  startStudentFormSyncJob,
+} from "./jobs/index.js";
 
 const app = express();
+
+// Rate limiting
+const limiter = expressRateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests, please try again later.",
+});
+app.use(limiter);
 
 (async () => {
   await connectDB();
@@ -21,18 +33,8 @@ const app = express();
   startStudentFormSyncJob(); // cron job
 })();
 
-app.get("/health", (req, res) => res.json({ status: "ok" }));
-app.get("/sync", async (req, res) => {
-  // this route is for testing only
-  let data = {};
-  // data.token = await zohoAnalyticService.getAccessToken();
-  // data.enrollments = await SyncEnrollments();
-  // data.withdrawals = await SyncWithdrawal();
-  // data.applicants = await SyncApplicant();
-  // data.applicationForms = await SyncApplicationForms();
-  // data.prospectForms = await SyncProspectForms();
-  // data.students = await SyncStudentForms();
-  return res.json(data);
-});
+// Routes
+app.get("/health", (_, res) => res.json({ status: "ok" }));
+app.use("/api", syncRoutes);
 
 app.listen(3000, () => console.log("Scheduler running on port 3000"));

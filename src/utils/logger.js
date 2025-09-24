@@ -1,4 +1,5 @@
 import axios from "axios";
+import { config } from "../config/env.js";
 import { createLogger, format, transports } from "winston";
 
 // Function to dynamically generate log file names based on the date
@@ -103,15 +104,15 @@ const sendNtfy = (topic, message, meta = []) => {
 
 // Helper methods that accept meta args
 logger.debug = (message, ...meta) => {
-  sendNtfy('arcadia',message, meta);
+  sendNtfy(config.ntfyTopic, message, meta);
   logger.log({ level: "debug", message, ...meta })
 };
 logger.info = (message, ...meta) => {
-  sendNtfy('arcadia',message, meta);
+  sendNtfy(config.ntfyTopic, message, meta);
   logger.log({ level: "info", message, ...meta });
 };
 logger.error = (message, ...meta) => {
-  sendNtfy('arcadia-error',message, meta);
+  sendNtfy(`${config.ntfyTopic}-error`, message, meta);
   logger.log({ level: "error", message, ...meta });
 };
 

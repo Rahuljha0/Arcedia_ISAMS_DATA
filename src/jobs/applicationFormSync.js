@@ -13,18 +13,8 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncApplicationForms = async () => {  
-  logger.info("Syncing application forms...");
-
-  let applicationForms = await zohoCrmService.getApplicationForms();
-
-  // Sort application forms by lastUpdated (oldest → newest)
-  applicationForms.sort((a, b) => new Date(a.Modified_Time) - new Date(b.Modified_Time));
-
-  // Keep only application forms updated after the last sync
   const lastUpdated = await metadataService.getApplicationFormLastUpdated();
-  applicationForms = applicationForms.filter(
-    (applicationForm) => new Date(applicationForm.Modified_Time) > new Date(lastUpdated)
-  );
+  let applicationForms = await zohoCrmService.getApplicationForms(lastUpdated);
 
   // If no new application forms to sync, return
   if(applicationForms.length === 0) {
@@ -49,7 +39,6 @@ export const SyncApplicationForms = async () => {
     success = applicationForms.length;
   }
 
-  logger.info(`Synced ${success} application forms successfully`);
   return success;
 };
 
@@ -57,7 +46,6 @@ export const SyncApplicationForms = async () => {
 export const startApplicationFormSyncJob = () => {
   logger.info(`Starting application form sync job with schedule: ${config.cronSchedule}`);
   cron.schedule(config.cronSchedule, async () => {
-    logger.info("Running scheduled sync job...");
     await SyncApplicationForms();
   }, {
     timezone: "Asia/Dubai"
