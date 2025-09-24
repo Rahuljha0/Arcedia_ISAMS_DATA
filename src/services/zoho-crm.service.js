@@ -23,7 +23,7 @@ export const zohoCrmService = {
 
   executeQuery: async (baseQuery, limit = 2000) => {
     const token = await zohoCrmService.getAccessToken();
-    if (!token) return [];
+    if(!token) throw new Error("Failed to get zoho crm access token");
 
     const headers = {
       Authorization: `Zoho-oauthtoken ${token}`,
