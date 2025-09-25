@@ -145,7 +145,39 @@ The configuration file is located at `src/config/config.js`. It contains the fol
 ```
 
 ## Current Jobs
-- *Withdrawals Sync* – Fetches student withdrawals every 6 hours and pushes to Zoho Analytics
 - *Enrollments Sync* – (Planned/Implemented) Syncs student enrollment data on schedule
+- *Withdrawals Sync* – Fetches student withdrawals every 6 hours and pushes to Zoho Analytics
+- *Applicants Sync* – (Planned/Implemented) Syncs student applicants data on schedule
+- *Application forms Sync* – (Planned/Implemented) Syncs student application forms data on schedule
+- *Prospect forms Sync* – (Planned/Implemented) Syncs student prospect forms data on schedule
+- *Student forms Sync* – (Planned/Implemented) Syncs student forms data on schedule
 
-
+## Exposed Endpoints
+- *Enrollments Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/enrollments
+```
+- *Withdrawals Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/withdrawals
+```
+- *Applicants Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/applicants
+```
+- *Application forms Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/applicationForms
+```
+- *Prospect forms Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/prospectForms
+```
+- *Student forms Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/studentForms
+```
+- *All Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/all
+```

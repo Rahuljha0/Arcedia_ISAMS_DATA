@@ -36,9 +36,9 @@ router.get("/sync/prospectForms", async (req, res) => {
   return res.status(200).json({message:"Synced prospect forms successfully", success});
 });
 
-router.get("/sync/students", async (req, res) => {
+router.get("/sync/studentForms", async (req, res) => {
   const success = await SyncStudentForms();
-  return res.status(200).json({message:"Synced students successfully", success});
+  return res.status(200).json({message:"Synced student forms successfully", success});
 });
 
 router.get("/sync/all", async (req, res) => {
