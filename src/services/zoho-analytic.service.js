@@ -103,10 +103,17 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoApi.bulkImportWithdrawalUrl, flatWithdrawals, ["schoolId"]);
       logger.info("Zoho Bulk Withdrawal Success", response.data);
 
-      // Delete enrollments where schoolId is in withdrawals
-      const criteria = `("schoolId" IN (${flatWithdrawals.map(withdrawal => `'${withdrawal.schoolId}'`).join(",")}))`;
-      const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(config.zohoApi.bulkDeleteEnrollmentUrl, criteria);
-      logger.info("Zoho Bulk Withdrawal Delete Success from Enrollments", deleteResponse.data);
+      // Delete enrollments where schoolId is in withdrawals in chunks of 200
+      for (let i = 0; i < flatWithdrawals.length; i += 200) {
+        const chunk = flatWithdrawals.slice(i, i + 200);
+        const criteria = `("schoolId" IN (${chunk.map(w => `'${w.schoolId}'`).join(",")}))`;
+        const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(
+          config.zohoApi.bulkDeleteEnrollmentUrl,
+          criteria
+        );
+        logger.info("Zoho Bulk Withdrawal Delete Success from Enrollments", deleteResponse.data, criteria);
+      }
+
 
       return response.data;
     } catch (err) {
