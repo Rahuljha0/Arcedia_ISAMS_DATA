@@ -78,7 +78,9 @@ export const zohoCrmService = {
             Date_of_Birth, Gender, Interested_Year_Group, Languages, Marital_Status, Nationality, Offer_Sent_on, 
             Offer_Status, Contact_Name, Payment_Receipt_Date, Payment_Status, Deal_Name, Religion, 
             Secondary_Contact_Name, Stage, Approval_Date, First_Name, Last_Name, Tour_Date, 
-            Tour_Completed, Last_Activity_Time, Modified_Time , Created_Time 
+            Tour_Completed, Tour_Assigned_Staff, Tour_ID, Tour_Time, Offer_Rejected_on, Offer_Accepted_on, 
+            Payment_Confirmation_By, Enrollment_Deposit_Fee, Assessment_Fee, Term, 
+            Last_Activity_Time, Modified_Time , Created_Time 
         from Deals 
         where First_Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
         order by Modified_Time ASC

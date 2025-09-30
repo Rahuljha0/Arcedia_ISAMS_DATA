@@ -168,6 +168,8 @@ export const zohoAnalyticService = {
         prospect.Acadmic_Year = prospect?.Acadmic_Year?.name || null;
         prospect.Contact_Name = prospect?.Contact_Name?.name || null;
         prospect.Languages = prospect?.Languages?.join(",") || null;
+        prospect.Tour_Assigned_Staff = prospect?.Tour_Assigned_Staff?.name || null;
+        prospect.Payment_Confirmation_By = prospect?.Payment_Confirmation_By?.name || null;
         return prospect;
       });
 
