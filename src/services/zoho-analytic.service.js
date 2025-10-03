@@ -21,10 +21,7 @@ export const zohoAnalyticService = {
     }
   },
 
-  bulkDeleteRequest: async (url, criteria) => {
-    const token = await zohoAnalyticService.getAccessToken();
-    if (!token) throw new Error("Failed to get access token");
-
+  bulkDeleteRequest: async (url, token, criteria) => {
     const headers = {
       "ZANALYTICS-ORGID": config.zohoApi.orgId,
       Authorization: `Zoho-oauthtoken ${token}`,
@@ -104,11 +101,15 @@ export const zohoAnalyticService = {
       logger.info("Zoho Bulk Withdrawal Success", response.data);
 
       // Delete enrollments where schoolId is in withdrawals in chunks of 200
+      const token = await zohoAnalyticService.getAccessToken();
+      if (!token) throw new Error("Failed to get access token");
+
       for (let i = 0; i < flatWithdrawals.length; i += 200) {
         const chunk = flatWithdrawals.slice(i, i + 200);
         const criteria = `("schoolId" IN (${chunk.map(w => `'${w.schoolId}'`).join(",")}))`;
         const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(
           config.zohoApi.bulkDeleteEnrollmentUrl,
+          token,
           criteria
         );
         logger.info("Zoho Bulk Withdrawal Delete Success from Enrollments", deleteResponse.data, criteria);
