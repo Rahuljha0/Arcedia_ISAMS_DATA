@@ -6,10 +6,12 @@ export const config = {
   clientApi: {
     clientId: process.env.ISAMS_CLIENT_ID,
     clientSecret: process.env.ISAMS_CLIENT_SECRET,
-    accessTokenUrl: "https://arcadiaschool.isamshosting.cloud/auth/connect/token",
+    accessTokenUrl:
+      "https://arcadiaschool.isamshosting.cloud/auth/connect/token",
     enrollmentUrl: "https://arcadiaschool.isamshosting.cloud/Main/api/students",
     withdrawalsUrl: "https://arcadiaschool.isamshosting.cloud/api/alumni",
-    applicantsUrl: "https://arcadiaschool.isamshosting.cloud/Main/api/admissions/applicants",
+    applicantsUrl:
+      "https://arcadiaschool.isamshosting.cloud/Main/api/admissions/applicants",
   },
   zohoCrmApi: {
     clientId: process.env.ZOHO_CRM_CLIENT_ID,
@@ -17,6 +19,13 @@ export const config = {
     refreshToken: process.env.ZOHO_CRM_REFRESH_TOKEN,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
     queryApiUrl: "https://www.zohoapis.com/crm/v8/coql",
+  },
+  zohoBookingApi: {
+    clientId: process.env.ZOHO_BOOKINGS_CLIENT_ID,
+    clientSecret: process.env.ZOHO_BOOKINGS_CLIENT_SECRET,
+    refreshToken: process.env.ZOHO_BOOKINGS_REFRESH_TOKEN,
+    accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
+    toursUrl: "https://www.zohoapis.com/bookings/v1/json/fetchappointment",
   },
   zohoApi: {
     clientId: process.env.ZOHO_CLIENT_ID,
@@ -31,6 +40,7 @@ export const config = {
     bulkImportApplicationFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_APPLICATION_FORM_VIEW_ID}/data`,
     bulkImportProspectFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_PROSPECT_FORM_VIEW_ID}/data`,
     bulkImportStudentFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_STUDENT_FORM_VIEW_ID}/data`,
+    bulkImportTourFormUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_TOUR_VIEW_ID}/data`,
     bulkDeleteEnrollmentUrl: `https://analyticsapi.zoho.com/restapi/v2/workspaces/${process.env.ZOHO_WORKSPACE_ID}/views/${process.env.ZOHO_ENROLLMENT_VIEW_ID}/rows`,
   },
   cronSchedule: parseCronInterval(process.env.CRON_INTERVAL),

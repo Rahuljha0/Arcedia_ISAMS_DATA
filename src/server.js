@@ -10,6 +10,7 @@ import {
   startApplicationFormSyncJob,
   startProspectFormSyncJob,
   startStudentFormSyncJob,
+  startTourSyncJob,
 } from "./jobs/index.js";
 
 const app = express();
@@ -31,6 +32,7 @@ app.use(limiter);
   startApplicationFormSyncJob(); // cron job
   startProspectFormSyncJob(); // cron job
   startStudentFormSyncJob(); // cron job
+  startTourSyncJob(); // cron job
 })();
 
 // Routes
