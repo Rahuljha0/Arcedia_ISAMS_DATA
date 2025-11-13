@@ -16,11 +16,13 @@ export const SyncApplicationForms = async () => {
   let allApplicationForms = await zohoCrmService.getApplicationForms();
 
   // Delete application forms from zoho analytics those are not in source
-  const sourceIds = new Set(allApplicationForms.map((a) => a.id));
+  const pk = config.zohoAnalyticApi.primaryKeys.applicationForm;
+  const sourcePk = pk.toLowerCase();
+  const sourceIds = new Set(allApplicationForms.map((a) => a[sourcePk]));
   const analytics = await zohoAnalyticService.exportApplicationForms();
   const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a.ID))
-    .map((a) => a.ID);
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
 
   logger.info(
     `Application Forms: ${allApplicationForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} application forms from Analytics`

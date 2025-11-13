@@ -114,7 +114,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.enrollmentViewId,
         flatStudents,
-        [config.zohoAnalyticApi.primaryKeys.enrollmentViewId]
+        [config.zohoAnalyticApi.primaryKeys.enrollment]
       );
       logger.info("Zoho Bulk Enrollment Success", response.data);
       return response.data;
@@ -147,7 +147,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.withdrawalViewId,
         flatWithdrawals,
-        [config.zohoAnalyticApi.primaryKeys.withdrawalViewId]
+        [config.zohoAnalyticApi.primaryKeys.withdrawal]
       );
       logger.info("Zoho Bulk Withdrawal Success", response.data);
       return response.data;
@@ -173,7 +173,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.applicantViewId,
         flatApplicants,
-        [config.zohoAnalyticApi.primaryKeys.applicantViewId]
+        [config.zohoAnalyticApi.primaryKeys.applicant]
       );
       logger.info("Zoho Bulk Applicant Success", response.data);
       return response.data;
@@ -202,7 +202,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.applicationFormViewId,
         flatApplicationForms,
-        [config.zohoAnalyticApi.primaryKeys.applicationFormViewId]
+        [config.zohoAnalyticApi.primaryKeys.applicationForm]
       );
       logger.info("Zoho Bulk Application Forms Success", response.data);
       return response.data;
@@ -233,7 +233,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.prospectFormViewId,
         flatProspects,
-        [config.zohoAnalyticApi.primaryKeys.prospectFormViewId]
+        [config.zohoAnalyticApi.primaryKeys.prospectForm]
       );
       logger.info("Zoho Bulk Prospects Success", response.data);
       return response.data;
@@ -269,7 +269,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.studentFormViewId,
         flatStudentForms,
-        [config.zohoAnalyticApi.primaryKeys.studentFormViewId]
+        [config.zohoAnalyticApi.primaryKeys.studentForm]
       );
       logger.info("Zoho Bulk Student Forms Success", response.data);
       return response.data;
@@ -330,7 +330,7 @@ export const zohoAnalyticService = {
       const response = await zohoAnalyticService.bulkUpsertRequest(
         config.zohoAnalyticApi.tourViewId,
         flatTours,
-        [config.zohoAnalyticApi.primaryKeys.tourViewId]
+        [config.zohoAnalyticApi.primaryKeys.tour]
       );
       logger.info("Zoho Bulk Tours Success", response.data);
       return response.data;
@@ -408,49 +408,49 @@ export const zohoAnalyticService = {
   deleteEnrollments: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.enrollmentViewId,
+      config.zohoAnalyticApi.primaryKeys.enrollment,
       config.zohoAnalyticApi.enrollmentViewId
     );
   },
   deleteWithdrawals: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.withdrawalViewId,
+      config.zohoAnalyticApi.primaryKeys.withdrawal,
       config.zohoAnalyticApi.withdrawalViewId
     );
   },
   deleteApplicants: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.applicantViewId,
+      config.zohoAnalyticApi.primaryKeys.applicant,
       config.zohoAnalyticApi.applicantViewId
     );
   },
   deleteApplicationForms: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.applicationFormViewId,
+      config.zohoAnalyticApi.primaryKeys.applicationForm,
       config.zohoAnalyticApi.applicationFormViewId
     );
   },
   deleteProspects: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.prospectFormViewId,
+      config.zohoAnalyticApi.primaryKeys.prospectForm,
       config.zohoAnalyticApi.prospectFormViewId
     );
   },
   deleteStudentForms: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.studentFormViewId,
+      config.zohoAnalyticApi.primaryKeys.studentForm,
       config.zohoAnalyticApi.studentFormViewId
     );
   },
   deleteTours: async (Ids) => {
     return await zohoAnalyticService.deleteInChunks(
       Ids,
-      config.zohoAnalyticApi.primaryKeys.tourViewId,
+      config.zohoAnalyticApi.primaryKeys.tour,
       config.zohoAnalyticApi.tourViewId
     );
   },

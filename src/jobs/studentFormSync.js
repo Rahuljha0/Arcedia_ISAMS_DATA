@@ -16,11 +16,13 @@ export const SyncStudentForms = async () => {
   let allStudentForms = await zohoCrmService.getStudentForms();
 
   // Delete student forms from zoho analytics those are not in source
-  const sourceIds = new Set(allStudentForms.map((a) => a.id));
+  const pk = config.zohoAnalyticApi.primaryKeys.studentForm;
+  const sourcePk = pk.toLowerCase();
+  const sourceIds = new Set(allStudentForms.map((a) => a[sourcePk]));
   const analytics = await zohoAnalyticService.exportStudentForms();
   const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a.ID))
-    .map((a) => a.ID);
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
 
   logger.info(
     `Student Forms: ${allStudentForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} student forms from Analytics`

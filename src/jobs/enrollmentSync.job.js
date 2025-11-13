@@ -32,6 +32,22 @@ export const SyncEnrollments = async () => {
   // Sort students by lastUpdated (oldest → newest)
   students.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
 
+  // Delete students from zoho analytics those are not in source
+  const pk = config.zohoAnalyticApi.primaryKeys.enrollment;
+  const sourceIds = new Set(students.map((a) => a[pk]));
+  const analytics = await zohoAnalyticService.exportEnrollments();
+  const needToDelete = analytics.data
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
+
+  logger.info(
+    `Enrollments: ${students.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} enrollments from Analytics`
+  );
+  if (needToDelete.length > 0) {
+    const deleted = await zohoAnalyticService.deleteEnrollments(needToDelete);
+    logger.info(`Deleted ${deleted} enrollments from Analytics`);
+  }
+
   // Keep only students updated after the last sync
   const lastUpdated = await metadataService.getEnrollmentLastUpdated();
   students = students.filter(

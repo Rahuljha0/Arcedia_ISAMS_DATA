@@ -33,11 +33,12 @@ export const SyncApplicant = async () => {
   applicants.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
 
   // Delete applicants from zoho analytics those are not in source
-  const sourceIds = new Set(applicants.map((a) => a.schoolId));
+  const pk = config.zohoAnalyticApi.primaryKeys.applicant;
+  const sourceIds = new Set(applicants.map((a) => a[pk]));
   const analytics = await zohoAnalyticService.exportApplicants();
   const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a.schoolId))
-    .map((a) => a.schoolId);
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
 
   logger.info(
     `Applicants: ${applicants.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} applicants from Analytics`

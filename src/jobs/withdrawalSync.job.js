@@ -33,6 +33,22 @@ export const SyncWithdrawal = async () => {
   // Sort withdrawals by lastUpdated (oldest → newest)
   withdrawals.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
 
+  // Delete students from zoho analytics those are not in source
+  const pk = config.zohoAnalyticApi.primaryKeys.withdrawal;
+  const sourceIds = new Set(withdrawals.map((a) => a[pk]));
+  const analytics = await zohoAnalyticService.exportWithdrawals();
+  const needToDelete = analytics.data
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
+
+  logger.info(
+    `Withdrawals: ${withdrawals.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} withdrawals from Analytics`
+  );
+  if (needToDelete.length > 0) {
+    const deleted = await zohoAnalyticService.deleteWithdrawals(needToDelete);
+    logger.info(`Deleted ${deleted} withdrawals from Analytics`);
+  }
+
   // Keep only withdrawals updated after the last sync
   const lastUpdated = await metadataService.getWithdrawalLastUpdated();
   withdrawals = withdrawals.filter(
