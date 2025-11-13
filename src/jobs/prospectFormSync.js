@@ -13,6 +13,24 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncProspectForms = async () => {
+  let allProspectForms = await zohoCrmService.getProspectForms();
+
+  // Delete student forms from zoho analytics those are not in source
+  const sourceIds = new Set(allProspectForms.map((a) => a.id));
+  const analytics = await zohoAnalyticService.exportProspects();
+  const needToDelete = analytics.data
+    .filter((a) => !sourceIds.has(a.ID))
+    .map((a) => a.ID);
+
+  logger.info(
+    `Prospect Forms: ${allProspectForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} prospect forms from Analytics`
+  );
+  if (needToDelete.length > 0) {
+    const deleted = await zohoAnalyticService.deleteProspects(needToDelete);
+    logger.info(`Deleted ${deleted} prospect forms from Analytics`);
+  }
+
+  // Keep only student forms updated after the last sync
   const lastUpdated = await metadataService.getProspectFormLastUpdated();
   let prospects = await zohoCrmService.getProspectForms(lastUpdated);
 

@@ -13,17 +13,17 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncApplicationForms = async () => {
-  let applicationForms = await zohoCrmService.getApplicationForms();
+  let allApplicationForms = await zohoCrmService.getApplicationForms();
 
-  // Delete applicants from zoho analytics those are not in source
-  const sourceIds = new Set(applicationForms.map((a) => a.id));
+  // Delete application forms from zoho analytics those are not in source
+  const sourceIds = new Set(allApplicationForms.map((a) => a.id));
   const analytics = await zohoAnalyticService.exportApplicationForms();
   const needToDelete = analytics.data
     .filter((a) => !sourceIds.has(a.ID))
     .map((a) => a.ID);
 
   logger.info(
-    `Applicants: ${applicationForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} application forms from Analytics`
+    `Application Forms: ${allApplicationForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} application forms from Analytics`
   );
   if (needToDelete.length > 0) {
     const deleted = await zohoAnalyticService.deleteApplicationForms(
@@ -34,10 +34,7 @@ export const SyncApplicationForms = async () => {
 
   // Keep only applicants updated after the last sync
   const lastUpdated = await metadataService.getApplicationFormLastUpdated();
-  applicationForms = applicationForms.filter(
-    (applicationForm) =>
-      new Date(applicationForm.Modified_Time) > new Date(lastUpdated)
-  );
+  let applicationForms = await zohoCrmService.getApplicationForms(lastUpdated);
 
   // If no new application forms to sync, return
   if (applicationForms.length === 0) {
