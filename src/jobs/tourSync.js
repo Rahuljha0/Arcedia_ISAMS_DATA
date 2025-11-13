@@ -15,7 +15,7 @@ import dayjs from "dayjs";
  */
 export const SyncTours = async () => {
   let tours = await zohoBookingService.getTours({
-    from_time: "01-01-2023",
+    from_time: "01-04-2023",
     to_time: dayjs().format("DD-MMM-YYYY"),
   });
 
