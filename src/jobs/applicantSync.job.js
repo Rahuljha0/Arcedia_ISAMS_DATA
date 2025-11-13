@@ -34,17 +34,17 @@ export const SyncApplicant = async () => {
 
   // Delete applicants from zoho analytics those are not in source
   const sourceIds = new Set(applicants.map((a) => a.schoolId));
-  const analyticApplicants = await zohoAnalyticService.exportApplicants();
-  const needToDelete = analyticApplicants.data
+  const analytics = await zohoAnalyticService.exportApplicants();
+  const needToDelete = analytics.data
     .filter((a) => !sourceIds.has(a.schoolId))
     .map((a) => a.schoolId);
 
   logger.info(
-    `Applicants: ${applicants.length}, AnalyticApplicants: ${analyticApplicants.data.length}, Deleting ${needToDelete.length} applicants from Zoho Analytics`
+    `Applicants: ${applicants.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} applicants from Analytics`
   );
   if (needToDelete.length > 0) {
     const deleted = await zohoAnalyticService.deleteApplicants(needToDelete);
-    logger.info(`Deleted ${deleted} applicants from Zoho Analytics`);
+    logger.info(`Deleted ${deleted} applicants from Analytics`);
   }
 
   // Keep only applicants updated after the last sync
