@@ -24,6 +24,7 @@ export const config = {
     clientId: process.env.ZOHO_BOOKINGS_CLIENT_ID,
     clientSecret: process.env.ZOHO_BOOKINGS_CLIENT_SECRET,
     refreshToken: process.env.ZOHO_BOOKINGS_REFRESH_TOKEN,
+    workspaceId: process.env.ZOHO_BOOKINGS_WORKSPACE_ID,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
     toursUrl: "https://www.zohoapis.com/bookings/v1/json/fetchappointment",
   },

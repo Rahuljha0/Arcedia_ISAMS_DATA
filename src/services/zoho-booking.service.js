@@ -34,7 +34,14 @@ export const zohoBookingService = {
       while (true) {
         // Prepare form-data payload
         const formData = new FormData();
-        formData.append("data", JSON.stringify({ ...params, page }));
+        formData.append(
+          "data",
+          JSON.stringify({
+            ...params,
+            workspace_id: config.zohoBookingApi.workspaceId,
+            page,
+          })
+        );
 
         const { data } = await http.post(
           config.zohoBookingApi.toursUrl,
