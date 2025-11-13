@@ -12,20 +12,20 @@ import { config } from "../config/env.js";
  * filters unsynced records based on `lastUpdated`,
  * and upserts them into Zoho Analytics.
  */
-export const SyncProspectForms = async () => {  
+export const SyncProspectForms = async () => {
   const lastUpdated = await metadataService.getProspectFormLastUpdated();
   let prospects = await zohoCrmService.getProspectForms(lastUpdated);
 
   // If no new prospects to sync, return
-  if(prospects.length === 0) {
+  if (prospects.length === 0) {
     logger.info("No new prospect forms to sync");
     return 0;
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     prospects = prospects.map((prospect) => {
-      prospect.First_Name = `${config.zohoApi.fullNamePrefix} ${prospect.First_Name}`;
+      prospect.First_Name = `${config.zohoAnalyticApi.fullNamePrefix} ${prospect.First_Name}`;
       return prospect;
     });
   }
@@ -34,8 +34,10 @@ export const SyncProspectForms = async () => {
 
   // Upsert each prospect into Zoho and update metadata
   let success = 0;
-  if(await zohoAnalyticService.upsertProspects(prospects)) {
-    await metadataService.upsertProspectForm(prospects[prospects.length - 1].Modified_Time);
+  if (await zohoAnalyticService.upsertProspects(prospects)) {
+    await metadataService.upsertProspectForm(
+      prospects[prospects.length - 1].Modified_Time
+    );
     success = prospects.length;
   }
 
@@ -44,10 +46,16 @@ export const SyncProspectForms = async () => {
 
 // Runs SyncProspects() on the configured cron schedule
 export const startProspectFormSyncJob = () => {
-  logger.info(`Starting prospect form sync job with schedule: ${config.cronSchedule}`);
-  cron.schedule(config.cronSchedule, async () => {
-    await SyncProspectForms();
-  }, {
-    timezone: "Asia/Dubai"
-  });
+  logger.info(
+    `Starting prospect form sync job with schedule: ${config.cronSchedule}`
+  );
+  cron.schedule(
+    config.cronSchedule,
+    async () => {
+      await SyncProspectForms();
+    },
+    {
+      timezone: "Asia/Dubai",
+    }
+  );
 };

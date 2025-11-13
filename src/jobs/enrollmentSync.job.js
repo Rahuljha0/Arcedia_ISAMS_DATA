@@ -12,11 +12,11 @@ import { config } from "../config/env.js";
  * filters unsynced records based on `lastUpdated`,
  * and upserts them into Zoho Analytics.
  */
-export const SyncEnrollments = async () => {  
+export const SyncEnrollments = async () => {
   let page = 1;
   let pageSize = 300;
   let students = [];
-  
+
   // Fetch students from Arcadia API in a paginated loop
   while (true) {
     const params = { page, pageSize };
@@ -31,7 +31,7 @@ export const SyncEnrollments = async () => {
 
   // Sort students by lastUpdated (oldest → newest)
   students.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
-  
+
   // Keep only students updated after the last sync
   const lastUpdated = await metadataService.getEnrollmentLastUpdated();
   students = students.filter(
@@ -39,15 +39,15 @@ export const SyncEnrollments = async () => {
   );
 
   // If no new students to sync, return
-  if(students.length === 0) {
+  if (students.length === 0) {
     logger.info("No new enrollments to sync");
     return 0;
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     students = students.map((student) => {
-      student.fullName = `${config.zohoApi.fullNamePrefix} ${student.fullName}`;
+      student.fullName = `${config.zohoAnalyticApi.fullNamePrefix} ${student.fullName}`;
       return student;
     });
   }
@@ -56,8 +56,10 @@ export const SyncEnrollments = async () => {
 
   // Upsert each student into Zoho and update metadata
   let success = 0;
-  if(await zohoAnalyticService.upsertEnrollments(students)) {
-    await metadataService.upsertEnrollment(students[students.length - 1].lastUpdated);
+  if (await zohoAnalyticService.upsertEnrollments(students)) {
+    await metadataService.upsertEnrollment(
+      students[students.length - 1].lastUpdated
+    );
     success = students.length;
   }
 
@@ -66,10 +68,16 @@ export const SyncEnrollments = async () => {
 
 // Runs SyncStudents() on the configured cron schedule
 export const startEnrollmentSyncJob = () => {
-  logger.info(`Starting enrollment sync job with schedule: ${config.cronSchedule}`);
-  cron.schedule(config.cronSchedule, async () => {
-    await SyncEnrollments();
-  }, {
-    timezone: "Asia/Dubai"
-  });
+  logger.info(
+    `Starting enrollment sync job with schedule: ${config.cronSchedule}`
+  );
+  cron.schedule(
+    config.cronSchedule,
+    async () => {
+      await SyncEnrollments();
+    },
+    {
+      timezone: "Asia/Dubai",
+    }
+  );
 };

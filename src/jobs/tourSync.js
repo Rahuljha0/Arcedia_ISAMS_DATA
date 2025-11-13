@@ -33,9 +33,9 @@ export const SyncTours = async () => {
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     tours = tours.map((tour) => {
-      tour.customer_name = `${config.zohoApi.fullNamePrefix} ${tour.customer_name}`;
+      tour.customer_name = `${config.zohoAnalyticApi.fullNamePrefix} ${tour.customer_name}`;
       return tour;
     });
   }

@@ -26,13 +26,13 @@ app.use(limiter);
 (async () => {
   await connectDB();
   await initModels();
-  startEnrollmentSyncJob(); // cron job
-  startWithdrawalSyncJob(); // cron job
-  startApplicantSyncJob(); // cron job
-  startApplicationFormSyncJob(); // cron job
-  startProspectFormSyncJob(); // cron job
-  startStudentFormSyncJob(); // cron job
-  startTourSyncJob(); // cron job
+  // startEnrollmentSyncJob(); // cron job
+  // startWithdrawalSyncJob(); // cron job
+  // startApplicantSyncJob(); // cron job
+  // startApplicationFormSyncJob(); // cron job
+  // startProspectFormSyncJob(); // cron job
+  // startStudentFormSyncJob(); // cron job
+  // startTourSyncJob(); // cron job
 })();
 
 // Routes

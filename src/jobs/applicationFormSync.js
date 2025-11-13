@@ -12,20 +12,20 @@ import { config } from "../config/env.js";
  * filters unsynced records based on `lastUpdated`,
  * and upserts them into Zoho Analytics.
  */
-export const SyncApplicationForms = async () => {  
+export const SyncApplicationForms = async () => {
   const lastUpdated = await metadataService.getApplicationFormLastUpdated();
   let applicationForms = await zohoCrmService.getApplicationForms(lastUpdated);
 
   // If no new application forms to sync, return
-  if(applicationForms.length === 0) {
+  if (applicationForms.length === 0) {
     logger.info("No new application forms to sync");
     return 0;
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     applicationForms = applicationForms.map((applicationForm) => {
-      applicationForm.First_Name = `${config.zohoApi.fullNamePrefix} ${applicationForm.First_Name}`;
+      applicationForm.First_Name = `${config.zohoAnalyticApi.fullNamePrefix} ${applicationForm.First_Name}`;
       return applicationForm;
     });
   }
@@ -34,8 +34,10 @@ export const SyncApplicationForms = async () => {
 
   // Upsert each application form into Zoho and update metadata
   let success = 0;
-  if(await zohoAnalyticService.upsertApplicationForms(applicationForms)) {
-    await metadataService.upsertApplicationForm(applicationForms[applicationForms.length - 1].Modified_Time);
+  if (await zohoAnalyticService.upsertApplicationForms(applicationForms)) {
+    await metadataService.upsertApplicationForm(
+      applicationForms[applicationForms.length - 1].Modified_Time
+    );
     success = applicationForms.length;
   }
 
@@ -44,10 +46,16 @@ export const SyncApplicationForms = async () => {
 
 // Runs SyncApplicationForms() on the configured cron schedule
 export const startApplicationFormSyncJob = () => {
-  logger.info(`Starting application form sync job with schedule: ${config.cronSchedule}`);
-  cron.schedule(config.cronSchedule, async () => {
-    await SyncApplicationForms();
-  }, {
-    timezone: "Asia/Dubai"
-  });
+  logger.info(
+    `Starting application form sync job with schedule: ${config.cronSchedule}`
+  );
+  cron.schedule(
+    config.cronSchedule,
+    async () => {
+      await SyncApplicationForms();
+    },
+    {
+      timezone: "Asia/Dubai",
+    }
+  );
 };

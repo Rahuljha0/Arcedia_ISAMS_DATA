@@ -4,13 +4,16 @@ import logger from "../utils/logger.js";
 import FormData from "form-data";
 
 export const zohoAnalyticService = {
+  /**
+   * Common Functions
+   */
   getAccessToken: async () => {
     try {
-      const res = await http.post(config.zohoApi.accessTokenUrl, null, {
+      const res = await http.post(config.zohoAnalyticApi.accessTokenUrl, null, {
         params: {
-          client_id: config.zohoApi.clientId,
-          client_secret: config.zohoApi.clientSecret,
-          refresh_token: config.zohoApi.refreshToken,
+          client_id: config.zohoAnalyticApi.clientId,
+          client_secret: config.zohoAnalyticApi.clientSecret,
+          refresh_token: config.zohoAnalyticApi.refreshToken,
           grant_type: "refresh_token",
         },
       });
@@ -24,9 +27,9 @@ export const zohoAnalyticService = {
     }
   },
 
-  bulkDeleteRequest: async (url, token, criteria) => {
+  bulkDeleteRequest: async (viewId, token, criteria) => {
     const headers = {
-      "ZANALYTICS-ORGID": config.zohoApi.orgId,
+      "ZANALYTICS-ORGID": config.zohoAnalyticApi.orgId,
       Authorization: `Zoho-oauthtoken ${token}`,
     };
 
@@ -34,14 +37,16 @@ export const zohoAnalyticService = {
       criteria,
     };
 
-    const fullUrl = `${url}?CONFIG=${encodeURIComponent(
+    const fullUrl = `https://analyticsapi.zoho.com/restapi/v2/workspaces/${
+      config.zohoAnalyticApi.workspaceId
+    }/views/${viewId}/rows?CONFIG=${encodeURIComponent(
       JSON.stringify(configJson)
     )}`;
 
     return await http.delete(fullUrl, { headers });
   },
 
-  bulkUpsertRequest: async (url, data, matchingColumns = []) => {
+  bulkUpsertRequest: async (viewId, data, matchingColumns = []) => {
     const token = await zohoAnalyticService.getAccessToken();
     if (!token) throw new Error("Failed to get access token");
 
@@ -50,7 +55,7 @@ export const zohoAnalyticService = {
 
     const headers = {
       ...formdata.getHeaders(),
-      "ZANALYTICS-ORGID": config.zohoApi.orgId,
+      "ZANALYTICS-ORGID": config.zohoAnalyticApi.orgId,
       Authorization: `Zoho-oauthtoken ${token}`,
     };
 
@@ -61,13 +66,41 @@ export const zohoAnalyticService = {
       autoIdentify: true,
     };
 
-    const fullUrl = `${url}?CONFIG=${encodeURIComponent(
+    const fullUrl = `https://analyticsapi.zoho.com/restapi/v2/workspaces/${
+      config.zohoAnalyticApi.workspaceId
+    }/views/${viewId}/data?CONFIG=${encodeURIComponent(
       JSON.stringify(configJson)
     )}`;
 
     return await http.post(fullUrl, formdata, { headers });
   },
 
+  bulkExportRequest: async (viewId) => {
+    const token = await zohoAnalyticService.getAccessToken();
+    if (!token) throw new Error("Failed to get access token");
+
+    const headers = {
+      "ZANALYTICS-ORGID": config.zohoAnalyticApi.orgId,
+      Authorization: `Zoho-oauthtoken ${token}`,
+    };
+
+    const configJson = {
+      responseFormat: "json",
+    };
+
+    const fullUrl = `https://analyticsapi.zoho.com/restapi/v2/workspaces/${
+      config.zohoAnalyticApi.workspaceId
+    }/views/${viewId}/data?CONFIG=${encodeURIComponent(
+      JSON.stringify(configJson)
+    )}`;
+
+    const response = await http.get(fullUrl, { headers });
+    return response.data;
+  },
+
+  /**
+   * Upsert RECORDS into Zoho Analytics
+   */
   upsertEnrollments: async (students) => {
     try {
       // Extract custom fields from each withdrawal
@@ -79,9 +112,9 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportEnrollmentUrl,
+        config.zohoAnalyticApi.enrollmentViewId,
         flatStudents,
-        ["id"]
+        [config.zohoAnalyticApi.primaryKeys.enrollmentViewId]
       );
       logger.info("Zoho Bulk Enrollment Success", response.data);
       return response.data;
@@ -112,33 +145,11 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportWithdrawalUrl,
+        config.zohoAnalyticApi.withdrawalViewId,
         flatWithdrawals,
-        ["schoolId"]
+        [config.zohoAnalyticApi.primaryKeys.withdrawalViewId]
       );
       logger.info("Zoho Bulk Withdrawal Success", response.data);
-
-      // Delete enrollments where schoolId is in withdrawals in chunks of 200
-      const token = await zohoAnalyticService.getAccessToken();
-      if (!token) throw new Error("Failed to get access token");
-
-      for (let i = 0; i < flatWithdrawals.length; i += 200) {
-        const chunk = flatWithdrawals.slice(i, i + 200);
-        const criteria = `("schoolId" IN (${chunk
-          .map((w) => `'${w.schoolId}'`)
-          .join(",")}))`;
-        const deleteResponse = await zohoAnalyticService.bulkDeleteRequest(
-          config.zohoApi.bulkDeleteEnrollmentUrl,
-          token,
-          criteria
-        );
-        logger.info(
-          "Zoho Bulk Withdrawal Delete Success from Enrollments",
-          deleteResponse.data,
-          criteria
-        );
-      }
-
       return response.data;
     } catch (err) {
       logger.error(
@@ -160,9 +171,9 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportApplicantUrl,
+        config.zohoAnalyticApi.applicantViewId,
         flatApplicants,
-        ["schoolId"]
+        [config.zohoAnalyticApi.primaryKeys.applicantViewId]
       );
       logger.info("Zoho Bulk Applicant Success", response.data);
       return response.data;
@@ -189,9 +200,9 @@ export const zohoAnalyticService = {
       );
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportApplicationFormUrl,
+        config.zohoAnalyticApi.applicationFormViewId,
         flatApplicationForms,
-        ["ID"]
+        [config.zohoAnalyticApi.primaryKeys.applicationFormViewId]
       );
       logger.info("Zoho Bulk Application Forms Success", response.data);
       return response.data;
@@ -220,9 +231,9 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportProspectFormUrl,
+        config.zohoAnalyticApi.prospectFormViewId,
         flatProspects,
-        ["ID"]
+        [config.zohoAnalyticApi.primaryKeys.prospectFormViewId]
       );
       logger.info("Zoho Bulk Prospects Success", response.data);
       return response.data;
@@ -256,9 +267,9 @@ export const zohoAnalyticService = {
       });
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportStudentFormUrl,
+        config.zohoAnalyticApi.studentFormViewId,
         flatStudentForms,
-        ["ID"]
+        [config.zohoAnalyticApi.primaryKeys.studentFormViewId]
       );
       logger.info("Zoho Bulk Student Forms Success", response.data);
       return response.data;
@@ -317,9 +328,9 @@ export const zohoAnalyticService = {
       }));
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
-        config.zohoApi.bulkImportTourFormUrl,
+        config.zohoAnalyticApi.tourViewId,
         flatTours,
-        ["booking_id"]
+        [config.zohoAnalyticApi.primaryKeys.tourViewId]
       );
       logger.info("Zoho Bulk Tours Success", response.data);
       return response.data;
@@ -327,5 +338,120 @@ export const zohoAnalyticService = {
       logger.error("Zoho Bulk Tours Error", err.response?.data || err.message);
       return null;
     }
+  },
+
+  /**
+   * Export records from Zoho Analytics
+   */
+  exportEnrollments: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.enrollmentViewId
+    );
+  },
+  exportWithdrawals: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.withdrawalViewId
+    );
+  },
+  exportApplicants: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.applicantViewId
+    );
+  },
+  exportApplicationForms: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.applicationFormViewId
+    );
+  },
+  exportProspects: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.prospectFormViewId
+    );
+  },
+  exportStudentForms: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.studentFormViewId
+    );
+  },
+  exportTours: async () => {
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.tourViewId
+    );
+  },
+
+  /**
+   * Delete records from Zoho Analytics
+   */
+  deleteInChunks: async (Ids, primaryKey, viewId) => {
+    if (!Ids?.length) return 0;
+
+    try {
+      const token = await zohoAnalyticService.getAccessToken();
+      if (!token) throw new Error("Failed to get access token");
+
+      for (let i = 0; i < Ids.length; i += 200) {
+        const chunk = Ids.slice(i, i + 200);
+        const criteria = `("${primaryKey}" IN (${chunk
+          .map((id) => `'${id}'`)
+          .join(",")}))`;
+        await zohoAnalyticService.bulkDeleteRequest(viewId, token, criteria);
+      }
+      return Ids.length;
+    } catch (err) {
+      logger.error(
+        "Zoho Bulk Delete Error in View " + viewId,
+        err.response?.data || err.message
+      );
+      return 0;
+    }
+  },
+  deleteEnrollments: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.enrollmentViewId,
+      config.zohoAnalyticApi.enrollmentViewId
+    );
+  },
+  deleteWithdrawals: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.withdrawalViewId,
+      config.zohoAnalyticApi.withdrawalViewId
+    );
+  },
+  deleteApplicants: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.applicantViewId,
+      config.zohoAnalyticApi.applicantViewId
+    );
+  },
+  deleteApplicationForms: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.applicationFormViewId,
+      config.zohoAnalyticApi.applicationFormViewId
+    );
+  },
+  deleteProspects: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.prospectFormViewId,
+      config.zohoAnalyticApi.prospectFormViewId
+    );
+  },
+  deleteStudentForms: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.studentFormViewId,
+      config.zohoAnalyticApi.studentFormViewId
+    );
+  },
+  deleteTours: async (Ids) => {
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.tourViewId,
+      config.zohoAnalyticApi.tourViewId
+    );
   },
 };
