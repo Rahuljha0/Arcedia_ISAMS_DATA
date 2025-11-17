@@ -283,6 +283,13 @@ export const zohoAnalyticService = {
   },
 
   upsertTours: async (tours) => {
+    const formatDateTime = (dateString) => {
+      if (!dateString) return null;
+      return dayjs(dateString, "DD-MMM-YYYY HH:mm:ss", true).format(
+        "YYYY-MM-DD HH:mm:ss"
+      );
+    };
+
     try {
       // Extract custom fields from each student form
       const flatTours = tours.map((tour) => ({
@@ -311,10 +318,10 @@ export const zohoAnalyticService = {
         cost: tour?.cost || null,
         service_name: tour?.service_name || null,
         payment_status: tour?.payment_status || null,
-        end_time: tour?.end_time || null,
+        end_time: formatDateTime(tour?.end_time),
         time_zone: tour?.time_zone || null,
         iso_start_time: tour?.iso_start_time || null,
-        start_time: tour?.start_time || null,
+        start_time: formatDateTime(tour?.start_time),
         last_updated_time: tour?.last_updated_time || null,
         due: tour?.due || null,
         customer_email: tour?.customer_email || null,
