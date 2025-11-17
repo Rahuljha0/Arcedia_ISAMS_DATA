@@ -14,17 +14,37 @@ import dayjs from "dayjs";
  * and upserts them into Zoho Analytics.
  */
 export const SyncTours = async () => {
-  const lastUpdated =
-    (await metadataService.getTourLastUpdated()) || "2023-04-01";
-  const from_time = dayjs(lastUpdated).format("DD-MMM-YYYY");
-  const to_time = dayjs().format("DD-MMM-YYYY");
-  const workspace_id = "4501039000000033018";
-
   let tours = await zohoBookingService.getTours({
-    workspace_id,
-    from_time,
-    to_time,
+    from_time: "01-04-2023",
+    to_time: dayjs().format("DD-MMM-YYYY"),
   });
+
+  // Sort tours by lastUpdated (oldest → newest)
+  tours.sort(
+    (a, b) => new Date(a.last_updated_time) - new Date(b.last_updated_time)
+  );
+
+  // Delete tours from zoho analytics those are not in source
+  const pk = config.zohoAnalyticApi.primaryKeys.tour;
+  const sourceIds = new Set(tours.map((a) => a[pk]));
+  const analytics = await zohoAnalyticService.exportTours();
+  const needToDelete = analytics.data
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
+
+  logger.info(
+    `Tours: ${tours.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} tours from Analytics`
+  );
+  if (needToDelete.length > 0) {
+    const deleted = await zohoAnalyticService.deleteTours(needToDelete);
+    logger.info(`Deleted ${deleted} tours from Analytics`);
+  }
+
+  // Keep only tours updated after the last sync
+  const lastUpdated = await metadataService.getTourLastUpdated();
+  tours = tours.filter(
+    (tour) => new Date(tour.last_updated_time) > new Date(lastUpdated)
+  );
 
   // If no new tours to sync, return
   if (tours.length === 0) {
@@ -33,9 +53,9 @@ export const SyncTours = async () => {
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     tours = tours.map((tour) => {
-      tour.customer_name = `${config.zohoApi.fullNamePrefix} ${tour.customer_name}`;
+      tour.customer_name = `${config.zohoAnalyticApi.fullNamePrefix} ${tour.customer_name}`;
       return tour;
     });
   }

@@ -12,20 +12,40 @@ import { config } from "../config/env.js";
  * filters unsynced records based on `lastUpdated`,
  * and upserts them into Zoho Analytics.
  */
-export const SyncStudentForms = async () => {  
+export const SyncStudentForms = async () => {
+  let allStudentForms = await zohoCrmService.getStudentForms();
+
+  // Delete student forms from zoho analytics those are not in source
+  const pk = config.zohoAnalyticApi.primaryKeys.studentForm;
+  const sourcePk = pk.toLowerCase();
+  const sourceIds = new Set(allStudentForms.map((a) => a[sourcePk]));
+  const analytics = await zohoAnalyticService.exportStudentForms();
+  const needToDelete = analytics.data
+    .filter((a) => !sourceIds.has(a[pk]))
+    .map((a) => a[pk]);
+
+  logger.info(
+    `Student Forms: ${allStudentForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} student forms from Analytics`
+  );
+  if (needToDelete.length > 0) {
+    const deleted = await zohoAnalyticService.deleteStudentForms(needToDelete);
+    logger.info(`Deleted ${deleted} student forms from Analytics`);
+  }
+
+  // Keep only student forms updated after the last sync
   const lastUpdated = await metadataService.getStudentFormLastUpdated();
   let studentForms = await zohoCrmService.getStudentForms(lastUpdated);
 
   // If no new student forms to sync, return
-  if(studentForms.length === 0) {
+  if (studentForms.length === 0) {
     logger.info("No new student forms to sync");
     return 0;
   }
 
   // prefix fullName (useful for testing/demo environments)
-  if (config.zohoApi.fullNamePrefix) {
+  if (config.zohoAnalyticApi.fullNamePrefix) {
     studentForms = studentForms.map((studentForm) => {
-      studentForm.First_Name = `${config.zohoApi.fullNamePrefix} ${studentForm.First_Name}`;
+      studentForm.First_Name = `${config.zohoAnalyticApi.fullNamePrefix} ${studentForm.First_Name}`;
       return studentForm;
     });
   }
@@ -34,8 +54,10 @@ export const SyncStudentForms = async () => {
 
   // Upsert each student form into Zoho and update metadata
   let success = 0;
-  if(await zohoAnalyticService.upsertStudentForms(studentForms)) {
-    await metadataService.upsertStudentForm(studentForms[studentForms.length - 1].Modified_Time);
+  if (await zohoAnalyticService.upsertStudentForms(studentForms)) {
+    await metadataService.upsertStudentForm(
+      studentForms[studentForms.length - 1].Modified_Time
+    );
     success = studentForms.length;
   }
 
@@ -44,10 +66,16 @@ export const SyncStudentForms = async () => {
 
 // Runs SyncStudentForms() on the configured cron schedule
 export const startStudentFormSyncJob = () => {
-  logger.info(`Starting student form sync job with schedule: ${config.cronSchedule}`);
-  cron.schedule(config.cronSchedule, async () => {
-    await SyncStudentForms();
-  }, {
-    timezone: "Asia/Dubai"
-  });
+  logger.info(
+    `Starting student form sync job with schedule: ${config.cronSchedule}`
+  );
+  cron.schedule(
+    config.cronSchedule,
+    async () => {
+      await SyncStudentForms();
+    },
+    {
+      timezone: "Asia/Dubai",
+    }
+  );
 };
