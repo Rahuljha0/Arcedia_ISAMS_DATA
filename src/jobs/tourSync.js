@@ -74,9 +74,11 @@ export const SyncTours = async () => {
 
 // Runs SyncTours() on the configured cron schedule
 export const startTourSyncJob = () => {
-  logger.info(`Starting tour sync job with schedule: ${config.cronSchedule}`);
+  logger.info(
+    `Starting tour sync job with schedule: ${config.cronInterval.tour}`
+  );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.tour,
     async () => {
       await SyncTours();
     },

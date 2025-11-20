@@ -85,10 +85,10 @@ export const SyncApplicant = async () => {
 // Runs SyncApplicant() on the configured cron schedule
 export const startApplicantSyncJob = () => {
   logger.info(
-    `Starting applicant sync job with schedule: ${config.cronSchedule}`
+    `Starting applicant sync job with schedule: ${config.cronInterval.applicant}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.applicant,
     async () => {
       await SyncApplicant();
     },

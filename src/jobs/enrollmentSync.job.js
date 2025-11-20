@@ -85,10 +85,10 @@ export const SyncEnrollments = async () => {
 // Runs SyncStudents() on the configured cron schedule
 export const startEnrollmentSyncJob = () => {
   logger.info(
-    `Starting enrollment sync job with schedule: ${config.cronSchedule}`
+    `Starting enrollment sync job with schedule: ${config.cronInterval.enrollment}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.enrollment,
     async () => {
       await SyncEnrollments();
     },

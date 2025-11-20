@@ -67,10 +67,10 @@ export const SyncProspectForms = async () => {
 // Runs SyncProspects() on the configured cron schedule
 export const startProspectFormSyncJob = () => {
   logger.info(
-    `Starting prospect form sync job with schedule: ${config.cronSchedule}`
+    `Starting prospect form sync job with schedule: ${config.cronInterval.prospectForm}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.prospectForm,
     async () => {
       await SyncProspectForms();
     },

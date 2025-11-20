@@ -86,10 +86,10 @@ export const SyncWithdrawal = async () => {
 // Runs SyncWithdrawal() on the configured cron schedule
 export const startWithdrawalSyncJob = () => {
   logger.info(
-    `Starting withdrawal sync job with schedule: ${config.cronSchedule}`
+    `Starting withdrawal sync job with schedule: ${config.cronInterval.withdrawal}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.withdrawal,
     async () => {
       await SyncWithdrawal();
     },

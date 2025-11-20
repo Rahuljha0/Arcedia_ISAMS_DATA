@@ -69,10 +69,10 @@ export const SyncApplicationForms = async () => {
 // Runs SyncApplicationForms() on the configured cron schedule
 export const startApplicationFormSyncJob = () => {
   logger.info(
-    `Starting application form sync job with schedule: ${config.cronSchedule}`
+    `Starting application form sync job with schedule: ${config.cronInterval.applicationForm}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.applicationForm,
     async () => {
       await SyncApplicationForms();
     },

@@ -126,7 +126,13 @@ src/
 
 The configuration file is located at `src/config/config.js`. It contains the following environment variables:
 ```bash
-    CRON_INTERVAL
+    ENROLLMENT_CRON
+    WITHDRAWAL_CRON
+    APPLICANT_CRON
+    APPLICATION_FORM_CRON
+    PROSPECT_FORM_CRON
+    STUDENT_FORM_CRON
+    TOUR_CRON
     NTFY_TOPIC
     ISAMS_CLIENT_ID
     ISAMS_CLIENT_SECRET

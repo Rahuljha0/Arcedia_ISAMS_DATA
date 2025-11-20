@@ -67,10 +67,10 @@ export const SyncStudentForms = async () => {
 // Runs SyncStudentForms() on the configured cron schedule
 export const startStudentFormSyncJob = () => {
   logger.info(
-    `Starting student form sync job with schedule: ${config.cronSchedule}`
+    `Starting student form sync job with schedule: ${config.cronInterval.studentForm}`
   );
   cron.schedule(
-    config.cronSchedule,
+    config.cronInterval.studentForm,
     async () => {
       await SyncStudentForms();
     },

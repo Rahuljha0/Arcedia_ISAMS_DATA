@@ -53,6 +53,14 @@ export const config = {
       tour: "booking_id",
     },
   },
-  cronSchedule: parseCronInterval(process.env.CRON_INTERVAL),
+  cronInterval: {
+    enrollment: parseCronInterval(process.env.ENROLLMENT_CRON),
+    withdrawal: parseCronInterval(process.env.WITHDRAWAL_CRON),
+    applicant: parseCronInterval(process.env.APPLICANT_CRON),
+    applicationForm: parseCronInterval(process.env.APPLICATION_FORM_CRON),
+    prospectForm: parseCronInterval(process.env.PROSPECT_FORM_CRON),
+    studentForm: parseCronInterval(process.env.STUDENT_FORM_CRON),
+    tour: parseCronInterval(process.env.TOUR_CRON),
+  },
   ntfyTopic: process.env.NTFY_TOPIC,
 };
