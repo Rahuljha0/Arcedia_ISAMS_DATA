@@ -24,7 +24,11 @@ export const SyncWithdrawal = async () => {
     const response = await arcadiaApi.getWithdrawals(params);
     withdrawals = withdrawals.concat(response.alumni || []);
 
-    if (page >= response.totalPages) {
+    if (
+      !response?.totalPages ||
+      !response?.alumni ||
+      page >= response?.totalPages
+    ) {
       break;
     }
     page++;

@@ -23,7 +23,11 @@ export const SyncEnrollments = async () => {
     const response = await arcadiaApi.getEnrollmentStudents(params);
     students = students.concat(response.students || []);
 
-    if (page >= response.totalPages) {
+    if (
+      !response?.totalPages ||
+      !response?.students ||
+      page >= response?.totalPages
+    ) {
       break;
     }
     page++;

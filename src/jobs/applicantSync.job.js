@@ -23,7 +23,11 @@ export const SyncApplicant = async () => {
     const response = await arcadiaApi.getApplicants(params);
     applicants = applicants.concat(response?.applicants || []);
 
-    if (page >= response?.totalPages) {
+    if (
+      !response?.totalPages ||
+      !response?.applicants ||
+      page >= response?.totalPages
+    ) {
       break;
     }
     page++;
