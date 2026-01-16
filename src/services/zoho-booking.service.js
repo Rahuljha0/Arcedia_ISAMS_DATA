@@ -17,7 +17,7 @@ export const zohoBookingService = {
       return res.data.access_token;
     } catch (err) {
       logger.error(
-        "Error getting access token:",
+        "ZohoBookingService: Error getting access token:",
         err.response?.data || err.message
       );
       throw err;

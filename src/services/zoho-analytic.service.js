@@ -21,7 +21,7 @@ export const zohoAnalyticService = {
       return res.data.access_token;
     } catch (err) {
       logger.error(
-        "Error getting access token:",
+        "ZohoAnalyticService: Error getting access token:",
         err.response?.data || err.message
       );
       throw err;

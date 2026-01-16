@@ -16,14 +16,17 @@ export const zohoCrmService = {
       });
       return res.data.access_token;
     } catch (err) {
-      logger.error("Error getting access token:", err.response?.data || err.message);
+      logger.error(
+        "ZohoCrmService: Error getting access token:",
+        err.response?.data || err.message
+      );
       throw err;
     }
   },
 
   executeQuery: async (baseQuery, limit = 2000) => {
     const token = await zohoCrmService.getAccessToken();
-    if(!token) throw new Error("Failed to get zoho crm access token");
+    if (!token) throw new Error("Failed to get zoho crm access token");
 
     const headers = {
       Authorization: `Zoho-oauthtoken ${token}`,
@@ -59,14 +62,21 @@ export const zohoCrmService = {
                Total_Documents, Mandatory_Doc, Address, Date_of_Birth, Gender, Language, 
                Nationality, Parent, Last_Activity_Time, Modified_Time, Created_Time 
         from Application2 
-        where Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        where Name != null ${
+          lastUpdated
+            ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'`
+            : ""
+        }
         order by Modified_Time ASC
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);
       return data;
     } catch (err) {
-      logger.error("Zoho Application Forms Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Application Forms Error",
+        err.response?.data || err.message
+      );
       return [];
     }
   },
@@ -82,14 +92,21 @@ export const zohoCrmService = {
             Payment_Confirmation_By, Enrollment_Deposit_Fee, Assessment_Fee, Term, 
             Last_Activity_Time, Modified_Time , Created_Time 
         from Deals 
-        where First_Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        where First_Name != null ${
+          lastUpdated
+            ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'`
+            : ""
+        }
         order by Modified_Time ASC
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);
       return data;
     } catch (err) {
-      logger.error("Zoho Prospect Forms Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Prospect Forms Error",
+        err.response?.data || err.message
+      );
       return [];
     }
   },
@@ -103,15 +120,22 @@ export const zohoCrmService = {
             School_Transfer_Name, Secondary_Contact_Name, Student_ID, Name, Withdrawal_Reasons, Status,  Last_Activity_Time, 
             Modified_Time , Created_Time 
         from Students 
-        where Name != null ${lastUpdated ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'` : ""}
+        where Name != null ${
+          lastUpdated
+            ? `and Modified_Time > '${formatDateForZoho(lastUpdated)}'`
+            : ""
+        }
         order by Modified_Time ASC 
       `;
 
       const data = await zohoCrmService.executeQuery(baseQuery);
       return data;
     } catch (err) {
-      logger.error("Zoho Student Forms Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Student Forms Error",
+        err.response?.data || err.message
+      );
       return [];
     }
   },
-}
+};
