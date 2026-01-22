@@ -6,12 +6,10 @@ export const config = {
   clientApi: {
     clientId: process.env.ISAMS_CLIENT_ID,
     clientSecret: process.env.ISAMS_CLIENT_SECRET,
-    accessTokenUrl:
-      "https://arcadiaschool.isamshosting.cloud/auth/connect/token",
+    accessTokenUrl: "https://arcadiaschool.isamshosting.cloud/auth/connect/token",
     enrollmentUrl: "https://arcadiaschool.isamshosting.cloud/Main/api/students",
     withdrawalsUrl: "https://arcadiaschool.isamshosting.cloud/api/alumni",
-    applicantsUrl:
-      "https://arcadiaschool.isamshosting.cloud/Main/api/admissions/applicants",
+    applicantsUrl: "https://arcadiaschool.isamshosting.cloud/Main/api/admissions/applicants",
   },
   zohoCrmApi: {
     clientId: process.env.ZOHO_CRM_CLIENT_ID,
@@ -24,9 +22,10 @@ export const config = {
     clientId: process.env.ZOHO_BOOKINGS_CLIENT_ID,
     clientSecret: process.env.ZOHO_BOOKINGS_CLIENT_SECRET,
     refreshToken: process.env.ZOHO_BOOKINGS_REFRESH_TOKEN,
-    workspaceId: process.env.ZOHO_BOOKINGS_WORKSPACE_ID,
+    tourWorkspaceId: process.env.ZOHO_BOOKINGS_TOUR_WORKSPACE_ID,
+    assessmentWorkspaceId: process.env.ZOHO_BOOKINGS_ASSESSMENT_WORKSPACE_ID,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
-    toursUrl: "https://www.zohoapis.com/bookings/v1/json/fetchappointment",
+    baseUrl: "https://www.zohoapis.com/bookings/v1/json/fetchappointment",
   },
   zohoAnalyticApi: {
     clientId: process.env.ZOHO_CLIENT_ID,
@@ -42,6 +41,7 @@ export const config = {
     prospectFormViewId: process.env.ZOHO_PROSPECT_FORM_VIEW_ID,
     studentFormViewId: process.env.ZOHO_STUDENT_FORM_VIEW_ID,
     tourViewId: process.env.ZOHO_TOUR_VIEW_ID,
+    assessmentViewId: process.env.ZOHO_ASSESSMENT_VIEW_ID,
     accessTokenUrl: "https://accounts.zoho.com/oauth/v2/token",
     primaryKeys: {
       enrollment: "schoolId",
@@ -51,6 +51,7 @@ export const config = {
       prospectForm: "ID",
       studentForm: "ID",
       tour: "booking_id",
+      assessment: "booking_id",
     },
   },
   cronInterval: {
@@ -61,6 +62,7 @@ export const config = {
     prospectForm: parseCronInterval(process.env.PROSPECT_FORM_CRON),
     studentForm: parseCronInterval(process.env.STUDENT_FORM_CRON),
     tour: parseCronInterval(process.env.TOUR_CRON),
+    assessment: parseCronInterval(process.env.ASSESSMENT_CRON),
   },
   ntfyTopic: process.env.NTFY_TOPIC,
 };

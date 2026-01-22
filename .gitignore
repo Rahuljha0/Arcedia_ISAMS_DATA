@@ -137,3 +137,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.agent/rules/snyk_rules.md
+
+#vs code settings
+.DS_Store
+settings.json

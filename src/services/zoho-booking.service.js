@@ -16,10 +16,7 @@ export const zohoBookingService = {
       });
       return res.data.access_token;
     } catch (err) {
-      logger.error(
-        "ZohoBookingService: Error getting access token:",
-        err.response?.data || err.message
-      );
+      logger.error("ZohoBookingService: Error getting access token:", err.response?.data || err.message);
       throw err;
     }
   },
@@ -38,22 +35,18 @@ export const zohoBookingService = {
           "data",
           JSON.stringify({
             ...params,
-            workspace_id: config.zohoBookingApi.workspaceId,
+            workspace_id: config.zohoBookingApi.tourWorkspaceId,
             page,
-          })
+          }),
         );
 
-        const { data } = await http.post(
-          config.zohoBookingApi.toursUrl,
-          formData,
-          {
-            headers: {
-              Authorization: `Zoho-oauthtoken ${token}`,
-              accept: "application/json",
-              ...formData.getHeaders(),
-            },
-          }
-        );
+        const { data } = await http.post(config.zohoBookingApi.baseUrl, formData, {
+          headers: {
+            Authorization: `Zoho-oauthtoken ${token}`,
+            accept: "application/json",
+            ...formData.getHeaders(),
+          },
+        });
 
         tours = tours.concat(data?.response?.returnvalue?.response || []);
 
@@ -65,7 +58,49 @@ export const zohoBookingService = {
 
       return tours;
     } catch (err) {
-      logger.error("Zoho Booking Error", err.response?.data || err.message);
+      logger.error("Zoho Booking Error in getTours", err.response?.data || err.message);
+      return null;
+    }
+  },
+  getAssessments: async (params = {}) => {
+    const token = await zohoBookingService.getAccessToken();
+    if (!token) return null;
+
+    let page = 1;
+    let assessments = [];
+
+    try {
+      while (true) {
+        // Prepare form-data payload
+        const formData = new FormData();
+        formData.append(
+          "data",
+          JSON.stringify({
+            ...params,
+            workspace_id: config.zohoBookingApi.assessmentWorkspaceId,
+            page,
+          }),
+        );
+
+        const { data } = await http.post(config.zohoBookingApi.baseUrl, formData, {
+          headers: {
+            Authorization: `Zoho-oauthtoken ${token}`,
+            accept: "application/json",
+            ...formData.getHeaders(),
+          },
+        });
+
+        assessments = assessments.concat(data?.response?.returnvalue?.response || []);
+
+        if (!data?.response?.returnvalue?.next_page_available) {
+          break;
+        }
+        page++;
+      }
+
+      return assessments;
+    } catch (err) {
+      logger.error("Zoho Booking Error in getAssessments", err.response?.data || err.message);
       return null;
     }
   },

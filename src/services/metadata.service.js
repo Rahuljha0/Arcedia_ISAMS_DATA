@@ -31,32 +31,21 @@ export const metadataService = {
     }
   },
 
-  upsertEnrollment: async (lastUpdatedAt) =>
-    metadataService.upsert("enrollment", lastUpdatedAt),
-  upsertWithdrawal: async (lastUpdatedAt) =>
-    metadataService.upsert("withdrawal", lastUpdatedAt),
-  upsertApplicant: async (lastUpdatedAt) =>
-    metadataService.upsert("applicant", lastUpdatedAt),
-  upsertApplicationForm: async (lastUpdatedAt) =>
-    metadataService.upsert("applicationForm", lastUpdatedAt),
-  upsertProspectForm: async (lastUpdatedAt) =>
-    metadataService.upsert("prospectForm", lastUpdatedAt),
-  upsertStudentForm: async (lastUpdatedAt) =>
-    metadataService.upsert("studentForm", lastUpdatedAt),
-  upsertTour: async (lastUpdatedAt) =>
-    metadataService.upsert("tour", lastUpdatedAt),
+  upsertEnrollment: async (lastUpdatedAt) => metadataService.upsert("enrollment", lastUpdatedAt),
+  upsertWithdrawal: async (lastUpdatedAt) => metadataService.upsert("withdrawal", lastUpdatedAt),
+  upsertApplicant: async (lastUpdatedAt) => metadataService.upsert("applicant", lastUpdatedAt),
+  upsertApplicationForm: async (lastUpdatedAt) => metadataService.upsert("applicationForm", lastUpdatedAt),
+  upsertProspectForm: async (lastUpdatedAt) => metadataService.upsert("prospectForm", lastUpdatedAt),
+  upsertStudentForm: async (lastUpdatedAt) => metadataService.upsert("studentForm", lastUpdatedAt),
+  upsertTour: async (lastUpdatedAt) => metadataService.upsert("tour", lastUpdatedAt),
+  upsertAssessment: async (lastUpdatedAt) => metadataService.upsert("assessment", lastUpdatedAt),
 
-  getEnrollmentLastUpdated: async () =>
-    metadataService.getLastUpdated("enrollment"),
-  getWithdrawalLastUpdated: async () =>
-    metadataService.getLastUpdated("withdrawal"),
-  getApplicantLastUpdated: async () =>
-    metadataService.getLastUpdated("applicant"),
-  getApplicationFormLastUpdated: async () =>
-    metadataService.getLastUpdated("applicationForm"),
-  getProspectFormLastUpdated: async () =>
-    metadataService.getLastUpdated("prospectForm"),
-  getStudentFormLastUpdated: async () =>
-    metadataService.getLastUpdated("studentForm"),
+  getEnrollmentLastUpdated: async () => metadataService.getLastUpdated("enrollment"),
+  getWithdrawalLastUpdated: async () => metadataService.getLastUpdated("withdrawal"),
+  getApplicantLastUpdated: async () => metadataService.getLastUpdated("applicant"),
+  getApplicationFormLastUpdated: async () => metadataService.getLastUpdated("applicationForm"),
+  getProspectFormLastUpdated: async () => metadataService.getLastUpdated("prospectForm"),
+  getStudentFormLastUpdated: async () => metadataService.getLastUpdated("studentForm"),
   getTourLastUpdated: async () => metadataService.getLastUpdated("tour"),
+  getAssessmentLastUpdated: async () => metadataService.getLastUpdated("assessment"),
 };
