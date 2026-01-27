@@ -133,6 +133,7 @@ The configuration file is located at `src/config/config.js`. It contains the fol
     PROSPECT_FORM_CRON
     STUDENT_FORM_CRON
     TOUR_CRON
+    ASSESSMENT_CRON
     NTFY_TOPIC
     ISAMS_CLIENT_ID
     ISAMS_CLIENT_SECRET
@@ -157,6 +158,8 @@ The configuration file is located at `src/config/config.js`. It contains the fol
 - *Application forms Sync* – (Planned/Implemented) Syncs student application forms data on schedule
 - *Prospect forms Sync* – (Planned/Implemented) Syncs student prospect forms data on schedule
 - *Student forms Sync* – (Planned/Implemented) Syncs student forms data on schedule
+- *Tour Sync* – (Planned/Implemented) Syncs student tour data on schedule
+- *Assessment Sync* – (Planned/Implemented) Syncs student assessment data on schedule
 
 ## Exposed Endpoints
 - *Enrollments Sync* – 
@@ -183,7 +186,15 @@ The configuration file is located at `src/config/config.js`. It contains the fol
 ```bash 
     curl -X GET http://localhost:3000/api/sync/studentForms
 ```
+- *Tour Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/tours
+```
+- *Assessment Sync* – 
+```bash 
+    curl -X GET http://localhost:3000/api/sync/assessments
+```
 - *All Sync* – 
 ```bash 
     curl -X GET http://localhost:3000/api/sync/all
-```
+``` 
