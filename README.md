@@ -164,37 +164,37 @@ The configuration file is located at `src/config/config.js`. It contains the fol
 ## Exposed Endpoints
 - *Enrollments Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/enrollments
+    curl http://localhost:3000/api/sync/enrollments
 ```
 - *Withdrawals Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/withdrawals
+    curl http://localhost:3000/api/sync/withdrawals
 ```
 - *Applicants Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/applicants
+    curl http://localhost:3000/api/sync/applicants
 ```
 - *Application forms Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/applicationForms
+    curl http://localhost:3000/api/sync/applicationForms
 ```
 - *Prospect forms Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/prospectForms
+    curl http://localhost:3000/api/sync/prospectForms
 ```
 - *Student forms Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/studentForms
+    curl http://localhost:3000/api/sync/studentForms
 ```
 - *Tour Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/tours
+    curl http://localhost:3000/api/sync/tours
 ```
 - *Assessment Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/assessments
+    curl http://localhost:3000/api/sync/assessments
 ```
 - *All Sync* – 
 ```bash 
-    curl GET http://localhost:3000/api/sync/all
+    curl http://localhost:3000/api/sync/all
 ``` 
