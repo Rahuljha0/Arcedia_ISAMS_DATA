@@ -20,7 +20,10 @@ export const zohoAnalyticService = {
       });
       return res.data.access_token;
     } catch (err) {
-      logger.error("ZohoAnalyticService: Error getting access token:", err.response?.data || err.message);
+      logger.error(
+        "ZohoAnalyticService: Error getting access token:",
+        err.response?.data || err.message,
+      );
       throw err;
     }
   },
@@ -97,11 +100,18 @@ export const zohoAnalyticService = {
         return student;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.enrollmentViewId, flatStudents, [config.zohoAnalyticApi.primaryKeys.enrollment]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.enrollmentViewId,
+        flatStudents,
+        [config.zohoAnalyticApi.primaryKeys.enrollment],
+      );
       logger.info("Zoho Bulk Enrollment Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Enrollment Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Enrollment Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -123,11 +133,18 @@ export const zohoAnalyticService = {
         return withdrawal;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.withdrawalViewId, flatWithdrawals, [config.zohoAnalyticApi.primaryKeys.withdrawal]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.withdrawalViewId,
+        flatWithdrawals,
+        [config.zohoAnalyticApi.primaryKeys.withdrawal],
+      );
       logger.info("Zoho Bulk Withdrawal Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Withdrawal Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Withdrawal Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -142,11 +159,18 @@ export const zohoAnalyticService = {
         return applicant;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.applicantViewId, flatApplicants, [config.zohoAnalyticApi.primaryKeys.applicant]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.applicantViewId,
+        flatApplicants,
+        [config.zohoAnalyticApi.primaryKeys.applicant],
+      );
       logger.info("Zoho Bulk Applicant Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Applicant Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Applicant Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -154,18 +178,28 @@ export const zohoAnalyticService = {
   upsertApplicationForms: async (applicationForms) => {
     try {
       // Extract custom fields from each application form
-      const flatApplicationForms = [...applicationForms].map((applicationForm) => {
-        applicationForm.ID = applicationForm?.id || null;
-        applicationForm.Parent = applicationForm?.Parent?.name || null;
-        applicationForm.Language = applicationForm?.Language?.join(",") || null;
-        return applicationForm;
-      });
+      const flatApplicationForms = [...applicationForms].map(
+        (applicationForm) => {
+          applicationForm.ID = applicationForm?.id || null;
+          applicationForm.Parent = applicationForm?.Parent?.name || null;
+          applicationForm.Language =
+            applicationForm?.Language?.join(",") || null;
+          return applicationForm;
+        },
+      );
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.applicationFormViewId, flatApplicationForms, [config.zohoAnalyticApi.primaryKeys.applicationForm]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.applicationFormViewId,
+        flatApplicationForms,
+        [config.zohoAnalyticApi.primaryKeys.applicationForm],
+      );
       logger.info("Zoho Bulk Application Forms Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Application Forms Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Application Forms Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -178,16 +212,25 @@ export const zohoAnalyticService = {
         prospect.Acadmic_Year = prospect?.Acadmic_Year?.name || null;
         prospect.Contact_Name = prospect?.Contact_Name?.name || null;
         prospect.Languages = prospect?.Languages?.join(",") || null;
-        prospect.Tour_Assigned_Staff = prospect?.Tour_Assigned_Staff?.name || null;
-        prospect.Payment_Confirmation_By = prospect?.Payment_Confirmation_By?.name || null;
+        prospect.Tour_Assigned_Staff =
+          prospect?.Tour_Assigned_Staff?.name || null;
+        prospect.Payment_Confirmation_By =
+          prospect?.Payment_Confirmation_By?.name || null;
         return prospect;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.prospectFormViewId, flatProspects, [config.zohoAnalyticApi.primaryKeys.prospectForm]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.prospectFormViewId,
+        flatProspects,
+        [config.zohoAnalyticApi.primaryKeys.prospectForm],
+      );
       logger.info("Zoho Bulk Prospects Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Prospects Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Prospects Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -197,21 +240,33 @@ export const zohoAnalyticService = {
       // Extract custom fields from each student form
       const flatStudentForms = [...studentForms].map((studentForm) => {
         studentForm.ID = studentForm?.id || null;
-        studentForm.Joined_in_Academic_Year = studentForm?.Joined_in_Academic_Year?.name || null;
-        studentForm.Primary_Contact_Name = studentForm?.Primary_Contact_Name?.name || null;
+        studentForm.Joined_in_Academic_Year =
+          studentForm?.Joined_in_Academic_Year?.name || null;
+        studentForm.Primary_Contact_Name =
+          studentForm?.Primary_Contact_Name?.name || null;
         studentForm.Prospect = studentForm?.Prospect?.name || null;
-        studentForm.Current_Academic_Year = studentForm?.Current_Academic_Year?.name || null;
-        studentForm.Exit_Comments = studentForm?.Exit_Comments?.join(",") || null;
-        studentForm.Withdrawal_Reasons = studentForm?.Withdrawal_Reasons?.join(",") || null;
+        studentForm.Current_Academic_Year =
+          studentForm?.Current_Academic_Year?.name || null;
+        studentForm.Exit_Comments =
+          studentForm?.Exit_Comments?.join(",") || null;
+        studentForm.Withdrawal_Reasons =
+          studentForm?.Withdrawal_Reasons?.join(",") || null;
         studentForm.Language = studentForm?.Language?.join(",") || null;
         return studentForm;
       });
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.studentFormViewId, flatStudentForms, [config.zohoAnalyticApi.primaryKeys.studentForm]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.studentFormViewId,
+        flatStudentForms,
+        [config.zohoAnalyticApi.primaryKeys.studentForm],
+      );
       logger.info("Zoho Bulk Student Forms Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Student Forms Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Student Forms Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -219,7 +274,9 @@ export const zohoAnalyticService = {
   upsertTours: async (tours) => {
     const formatDateTime = (dateString) => {
       if (!dateString) return null;
-      return dayjs(dateString, "DD-MMM-YYYY HH:mm:ss", true).format("YYYY-MM-DD HH:mm:ss");
+      return dayjs(dateString, "DD-MMM-YYYY HH:mm:ss", true).format(
+        "YYYY-MM-DD HH:mm:ss",
+      );
     };
 
     try {
@@ -264,9 +321,34 @@ export const zohoAnalyticService = {
         staff_email: tour?.staff_email || null,
         customer_booking_time_zone: tour?.customer_booking_time_zone || null,
         status: tour?.status || null,
+
+        child_name: tour?.customer_more_info?.["Child Name"] || null,
+        term_applying_for:
+          tour?.customer_more_info?.["Term Applying For?"] || null,
+        year_group: tour?.customer_more_info?.["Year Group"] || null,
+        number_of_attendees:
+          tour?.customer_more_info?.["No of Attendees?"] || null,
+        current_school_name:
+          tour?.customer_more_info?.[
+            "Please name your child current school?"
+          ] || null,
+        subject_interests:
+          tour?.customer_more_info?.[
+            "Please list any subject interests which your child has?"
+          ] || null,
+        number_of_siblings:
+          tour?.customer_more_info?.["Number of Sibling?"] || null,
+        sibling_year_groups:
+          tour?.customer_more_info?.[
+            "Does this child have siblings if so what year groups?"
+          ]?.join(",") || null,
       }));
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.tourViewId, flatTours, [config.zohoAnalyticApi.primaryKeys.tour]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.tourViewId,
+        flatTours,
+        [config.zohoAnalyticApi.primaryKeys.tour],
+      );
       logger.info("Zoho Bulk Tours Success", response.data);
       return response.data;
     } catch (err) {
@@ -278,7 +360,9 @@ export const zohoAnalyticService = {
   upsertAssessments: async (assessments) => {
     const formatDateTime = (dateString) => {
       if (!dateString) return null;
-      return dayjs(dateString, "DD-MMM-YYYY HH:mm:ss", true).format("YYYY-MM-DD HH:mm:ss");
+      return dayjs(dateString, "DD-MMM-YYYY HH:mm:ss", true).format(
+        "YYYY-MM-DD HH:mm:ss",
+      );
     };
 
     try {
@@ -286,7 +370,8 @@ export const zohoAnalyticService = {
       const flatAssessments = assessments.map((assessment) => ({
         staff_name: assessment?.staff_name || null,
         notes: assessment?.notes || null,
-        customer_booking_start_time: assessment?.customer_booking_start_time || null,
+        customer_booking_start_time:
+          assessment?.customer_booking_start_time || null,
         post_buffer: assessment?.post_buffer || null,
         staff_contact_number: assessment?.staff_contact_number || null,
         customer_contact_no: assessment?.customer_contact_no || null,
@@ -322,15 +407,44 @@ export const zohoAnalyticService = {
         customer_name: assessment?.customer_name || null,
         summary_url: assessment?.summary_url || null,
         staff_email: assessment?.staff_email || null,
-        customer_booking_time_zone: assessment?.customer_booking_time_zone || null,
+        customer_booking_time_zone:
+          assessment?.customer_booking_time_zone || null,
         status: assessment?.status || null,
+
+        child_name: assessment?.customer_more_info?.["Child Name"] || null,
+        term_applying_for:
+          assessment?.customer_more_info?.["Term Applying For?"] || null,
+        year_group: assessment?.customer_more_info?.["Year Group"] || null,
+        number_of_attendees:
+          assessment?.customer_more_info?.["No of Attendees?"] || null,
+        current_school_name:
+          assessment?.customer_more_info?.[
+            "Please name your child current school?"
+          ] || null,
+        subject_interests:
+          assessment?.customer_more_info?.[
+            "Please list any subject interests which your child has?"
+          ] || null,
+        number_of_siblings:
+          assessment?.customer_more_info?.["Number of Sibling?"] || null,
+        sibling_year_groups:
+          assessment?.customer_more_info?.[
+            "Does this child have siblings if so what year groups?"
+          ]?.join(",") || null,
       }));
 
-      const response = await zohoAnalyticService.bulkUpsertRequest(config.zohoAnalyticApi.assessmentViewId, flatAssessments, [config.zohoAnalyticApi.primaryKeys.assessment]);
+      const response = await zohoAnalyticService.bulkUpsertRequest(
+        config.zohoAnalyticApi.assessmentViewId,
+        flatAssessments,
+        [config.zohoAnalyticApi.primaryKeys.assessment],
+      );
       logger.info("Zoho Bulk Assessments Success", response.data);
       return response.data;
     } catch (err) {
-      logger.error("Zoho Bulk Assessments Error", err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Assessments Error",
+        err.response?.data || err.message,
+      );
       return null;
     }
   },
@@ -339,28 +453,44 @@ export const zohoAnalyticService = {
    * Export records from Zoho Analytics
    */
   exportEnrollments: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.enrollmentViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.enrollmentViewId,
+    );
   },
   exportWithdrawals: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.withdrawalViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.withdrawalViewId,
+    );
   },
   exportApplicants: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.applicantViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.applicantViewId,
+    );
   },
   exportApplicationForms: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.applicationFormViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.applicationFormViewId,
+    );
   },
   exportProspects: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.prospectFormViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.prospectFormViewId,
+    );
   },
   exportStudentForms: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.studentFormViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.studentFormViewId,
+    );
   },
   exportTours: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.tourViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.tourViewId,
+    );
   },
   exportAssessments: async () => {
-    return await zohoAnalyticService.bulkExportRequest(config.zohoAnalyticApi.assessmentViewId);
+    return await zohoAnalyticService.bulkExportRequest(
+      config.zohoAnalyticApi.assessmentViewId,
+    );
   },
   /**
    * Delete records from Zoho Analytics
@@ -379,32 +509,67 @@ export const zohoAnalyticService = {
       }
       return Ids.length;
     } catch (err) {
-      logger.error("Zoho Bulk Delete Error in View " + viewId, err.response?.data || err.message);
+      logger.error(
+        "Zoho Bulk Delete Error in View " + viewId,
+        err.response?.data || err.message,
+      );
       return 0;
     }
   },
   deleteEnrollments: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.enrollment, config.zohoAnalyticApi.enrollmentViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.enrollment,
+      config.zohoAnalyticApi.enrollmentViewId,
+    );
   },
   deleteWithdrawals: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.withdrawal, config.zohoAnalyticApi.withdrawalViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.withdrawal,
+      config.zohoAnalyticApi.withdrawalViewId,
+    );
   },
   deleteApplicants: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.applicant, config.zohoAnalyticApi.applicantViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.applicant,
+      config.zohoAnalyticApi.applicantViewId,
+    );
   },
   deleteApplicationForms: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.applicationForm, config.zohoAnalyticApi.applicationFormViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.applicationForm,
+      config.zohoAnalyticApi.applicationFormViewId,
+    );
   },
   deleteProspects: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.prospectForm, config.zohoAnalyticApi.prospectFormViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.prospectForm,
+      config.zohoAnalyticApi.prospectFormViewId,
+    );
   },
   deleteStudentForms: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.studentForm, config.zohoAnalyticApi.studentFormViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.studentForm,
+      config.zohoAnalyticApi.studentFormViewId,
+    );
   },
   deleteTours: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.tour, config.zohoAnalyticApi.tourViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.tour,
+      config.zohoAnalyticApi.tourViewId,
+    );
   },
   deleteAssessments: async (Ids) => {
-    return await zohoAnalyticService.deleteInChunks(Ids, config.zohoAnalyticApi.primaryKeys.assessment, config.zohoAnalyticApi.assessmentViewId);
+    return await zohoAnalyticService.deleteInChunks(
+      Ids,
+      config.zohoAnalyticApi.primaryKeys.assessment,
+      config.zohoAnalyticApi.assessmentViewId,
+    );
   },
 };
