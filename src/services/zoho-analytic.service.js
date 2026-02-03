@@ -338,10 +338,17 @@ export const zohoAnalyticService = {
           ] || null,
         number_of_siblings:
           tour?.customer_more_info?.["Number of Sibling?"] || null,
-        sibling_year_groups:
+        sibling_year_groups: Array.isArray(
           tour?.customer_more_info?.[
             "Does this child have siblings if so what year groups?"
-          ]?.join(",") || null,
+          ],
+        )
+          ? tour.customer_more_info[
+              "Does this child have siblings if so what year groups?"
+            ].join(",")
+          : tour?.customer_more_info?.[
+              "Does this child have siblings if so what year groups?"
+            ] || null,
       }));
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
@@ -427,10 +434,17 @@ export const zohoAnalyticService = {
           ] || null,
         number_of_siblings:
           assessment?.customer_more_info?.["Number of Sibling?"] || null,
-        sibling_year_groups:
+        sibling_year_groups: Array.isArray(
           assessment?.customer_more_info?.[
             "Does this child have siblings if so what year groups?"
-          ]?.join(",") || null,
+          ],
+        )
+          ? assessment.customer_more_info[
+              "Does this child have siblings if so what year groups?"
+            ].join(",")
+          : assessment?.customer_more_info?.[
+              "Does this child have siblings if so what year groups?"
+            ] || null,
       }));
 
       const response = await zohoAnalyticService.bulkUpsertRequest(
