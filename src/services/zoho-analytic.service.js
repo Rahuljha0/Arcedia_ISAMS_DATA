@@ -326,6 +326,7 @@ export const zohoAnalyticService = {
         term_applying_for:
           tour?.customer_more_info?.["Term Applying For?"] || null,
         year_group: tour?.customer_more_info?.["Year Group"] || null,
+        academic_year: tour?.customer_more_info?.["Academic Year"] || null,
         number_of_attendees:
           tour?.customer_more_info?.["No of Attendees?"] || null,
         current_school_name:
@@ -422,6 +423,7 @@ export const zohoAnalyticService = {
         term_applying_for:
           assessment?.customer_more_info?.["Term Applying For?"] || null,
         year_group: assessment?.customer_more_info?.["Year Group"] || null,
+        prospect_id: assessment?.customer_more_info?.["Prospect ID"] || null,
         number_of_attendees:
           assessment?.customer_more_info?.["No of Attendees?"] || null,
         current_school_name:
