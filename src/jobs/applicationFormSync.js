@@ -1,80 +1,117 @@
+import { withSyncedAt } from "../utils/syncStamp.js";
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { zohoCrmService } from "../services/zoho-crm.service.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
+import { getReconciliationResult } from "../utils/syncReconciliation.js";
 
-/**
- * SyncApplicationForms
- * ------------
- * Fetches application form records from ZOHO CRM,
- * filters unsynced records based on `lastUpdated`,
- * and upserts them into Zoho Analytics.
- */
 export const SyncApplicationForms = async () => {
-  let allApplicationForms = await zohoCrmService.getApplicationForms();
+  const allApplicationForms =
+    await zohoCrmService.getApplicationForms();
 
-  // Delete application forms from zoho analytics those are not in source
   const pk = config.zohoAnalyticApi.primaryKeys.applicationForm;
-  const sourcePk = pk.toLowerCase();
-  const sourceIds = new Set(allApplicationForms.map((a) => a[sourcePk]));
+
   const analytics = await zohoAnalyticService.exportApplicationForms();
-  const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a[pk]))
-    .map((a) => a[pk]);
+  const analyticsData = analytics?.data || [];
+
+  const reconciliation = getReconciliationResult({
+    sourceData: allApplicationForms,
+    analyticsData,
+    primaryKey: pk,
+  });
 
   logger.info(
-    `Application Forms: ${allApplicationForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} application forms from Analytics`
+    `Application Forms reconciliation | Source=${reconciliation.sourceCount} | Analytics=${reconciliation.analyticsCount} | CountMismatch=${reconciliation.countMismatch} | KeyMismatch=${reconciliation.keyMismatch} | FullSync=${reconciliation.fullSync}`
   );
-  if (needToDelete.length > 0) {
+
+  if (reconciliation.extraInAnalytics.length > 0) {
     const deleted = await zohoAnalyticService.deleteApplicationForms(
-      needToDelete
+      reconciliation.extraInAnalytics
     );
-    logger.info(`Deleted ${deleted} application forms from Analytics`);
+
+    logger.info(
+      `Application Forms: deleted ${deleted} records that no longer exist in source`
+    );
   }
 
-  // Keep only applicants updated after the last sync
-  const lastUpdated = await metadataService.getApplicationFormLastUpdated();
-  let applicationForms = await zohoCrmService.getApplicationForms(lastUpdated);
+  let recordsToSync;
 
-  // If no new application forms to sync, return
-  if (applicationForms.length === 0) {
-    logger.info("No new application forms to sync");
+  if (reconciliation.fullSync) {
+    recordsToSync = [...allApplicationForms];
+
+    logger.info(
+      `Application Forms: reconciliation mismatch detected. Performing FULL sync of ${recordsToSync.length} records.`
+    );
+  } else {
+    const lastUpdated =
+      await metadataService.getApplicationFormLastUpdated();
+
+    recordsToSync = allApplicationForms.filter(
+      (applicationForm) =>
+        new Date(applicationForm.Modified_Time) >
+        new Date(lastUpdated)
+    );
+
+    logger.info(
+      `Application Forms: source and Analytics are aligned. Performing incremental sync of ${recordsToSync.length} records.`
+    );
+  }
+
+  // FULL REFRESH every run
+  recordsToSync = [...allApplicationForms];
+  if (recordsToSync.length === 0) {
+    logger.info("No new or changed application forms to sync");
     return 0;
   }
 
-  // prefix fullName (useful for testing/demo environments)
   if (config.zohoAnalyticApi.fullNamePrefix) {
-    applicationForms = applicationForms.map((applicationForm) => {
-      applicationForm.First_Name = `${config.zohoAnalyticApi.fullNamePrefix} ${applicationForm.First_Name}`;
-      return applicationForm;
-    });
+    recordsToSync = recordsToSync.map((applicationForm) => ({
+      ...applicationForm,
+      First_Name: `${config.zohoAnalyticApi.fullNamePrefix} ${applicationForm.First_Name}`,
+    }));
   }
 
-  logger.info(`Syncing ${applicationForms.length} application forms...`);
+  logger.info(
+    `Application Forms: syncing ${recordsToSync.length} records using View ID ${config.zohoAnalyticApi.applicationFormViewId} and primary key ${pk}`
+  );
 
-  // Upsert each application form into Zoho and update metadata
-  let success = 0;
-  if (await zohoAnalyticService.upsertApplicationForms(applicationForms)) {
-    await metadataService.upsertApplicationForm(
-      applicationForms[applicationForms.length - 1].Modified_Time
-    );
-    success = applicationForms.length;
+  const result =
+    await zohoAnalyticService.upsertApplicationForms(withSyncedAt(recordsToSync));
+
+  if (!result) {
+    logger.error("Application Forms: Zoho Analytics sync failed");
+    return 0;
   }
 
-  return success;
+  await metadataService.upsertApplicationForm(
+    recordsToSync[recordsToSync.length - 1].Modified_Time
+  );
+
+  logger.info(
+    `Application Forms: sync completed successfully. Records processed=${recordsToSync.length}`
+  );
+
+  return recordsToSync.length;
 };
 
-// Runs SyncApplicationForms() on the configured cron schedule
 export const startApplicationFormSyncJob = () => {
   logger.info(
     `Starting application form sync job with schedule: ${config.cronInterval.applicationForm}`
   );
+
   cron.schedule(
     config.cronInterval.applicationForm,
     async () => {
-      await SyncApplicationForms();
+      try {
+        await SyncApplicationForms();
+      } catch (error) {
+        logger.error(
+          "Application Form sync job failed",
+          error.response?.data || error.message
+        );
+      }
     },
     {
       timezone: "Asia/Dubai",

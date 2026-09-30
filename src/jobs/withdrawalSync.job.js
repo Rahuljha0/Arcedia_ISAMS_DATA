@@ -1,9 +1,11 @@
+import { withSyncedAt } from "../utils/syncStamp.js";
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { arcadiaApi } from "../services/arcadia.service.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
+import { getReconciliationResult } from "../utils/syncReconciliation.js";
 
 /**
  * SyncWithdrawal
@@ -22,7 +24,7 @@ export const SyncWithdrawal = async () => {
   while (true) {
     const params = { page, pageSize, expand };
     const response = await arcadiaApi.getWithdrawals(params);
-    withdrawals = withdrawals.concat(response.alumni || []);
+    withdrawals = withdrawals.concat(response?.alumni || []);
 
     if (
       !response?.totalPages ||
@@ -37,54 +39,84 @@ export const SyncWithdrawal = async () => {
   // Sort withdrawals by lastUpdated (oldest → newest)
   withdrawals.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
 
-  // Delete students from zoho analytics those are not in source
   const pk = config.zohoAnalyticApi.primaryKeys.withdrawal;
-  const sourceIds = new Set(withdrawals.map((a) => a[pk]));
   const analytics = await zohoAnalyticService.exportWithdrawals();
-  const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a[pk]))
-    .map((a) => a[pk]);
+  const analyticsData = analytics?.data || [];
+
+  const reconciliation = getReconciliationResult({
+    sourceData: withdrawals,
+    analyticsData,
+    primaryKey: pk,
+  });
 
   logger.info(
-    `Withdrawals: ${withdrawals.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} withdrawals from Analytics`
+    `Withdrawals reconciliation | Source=${reconciliation.sourceCount} | Analytics=${reconciliation.analyticsCount} | CountMismatch=${reconciliation.countMismatch} | KeyMismatch=${reconciliation.keyMismatch} | FullSync=${reconciliation.fullSync}`
   );
-  if (needToDelete.length > 0) {
-    const deleted = await zohoAnalyticService.deleteWithdrawals(needToDelete);
-    logger.info(`Deleted ${deleted} withdrawals from Analytics`);
+
+  if (reconciliation.extraInAnalytics.length > 0) {
+    const deleted = await zohoAnalyticService.deleteWithdrawals(
+      reconciliation.extraInAnalytics
+    );
+
+    logger.info(
+      `Withdrawals: deleted ${deleted} records that no longer exist in source`
+    );
   }
 
-  // Keep only withdrawals updated after the last sync
-  const lastUpdated = await metadataService.getWithdrawalLastUpdated();
-  withdrawals = withdrawals.filter(
-    (withdrawal) => new Date(withdrawal.lastUpdated) > new Date(lastUpdated)
-  );
+  let recordsToSync;
 
-  // If no new withdrawals to sync, return
-  if (withdrawals.length === 0) {
-    logger.info("No new withdrawals to sync");
+  if (reconciliation.fullSync) {
+    recordsToSync = [...withdrawals];
+
+    logger.info(
+      `Withdrawals: reconciliation mismatch detected. Performing FULL sync of ${recordsToSync.length} records.`
+    );
+  } else {
+    const lastUpdated = await metadataService.getWithdrawalLastUpdated();
+
+    recordsToSync = withdrawals.filter(
+      (withdrawal) =>
+        new Date(withdrawal.lastUpdated) > new Date(lastUpdated)
+    );
+
+    logger.info(
+      `Withdrawals: source and Analytics are aligned. Performing incremental sync of ${recordsToSync.length} records.`
+    );
+  }
+
+  // FULL REFRESH every run
+  recordsToSync = [...withdrawals];
+  if (recordsToSync.length === 0) {
+    logger.info("No withdrawals to sync");
     return 0;
   }
 
+
   // prefix fullName (useful for testing/demo environments)
   if (config.zohoAnalyticApi.fullNamePrefix) {
-    withdrawals = withdrawals.map((withdrawal) => {
-      withdrawal.fullName = `${config.zohoAnalyticApi.fullNamePrefix} ${withdrawal.fullName}`;
-      return withdrawal;
-    });
+    recordsToSync = recordsToSync.map((withdrawal) => ({
+      ...withdrawal,
+      fullName: `${config.zohoAnalyticApi.fullNamePrefix} ${withdrawal.fullName || ""}`.trim(),
+    }));
   }
 
-  logger.info(`Syncing ${withdrawals.length} withdrawals...`);
+  logger.info(
+    `Withdrawals: syncing ${recordsToSync.length} records using View ID ${config.zohoAnalyticApi.withdrawalViewId} and primary key ${pk}`
+  );
 
-  // Upsert each withdrawal into Zoho and update metadata
-  let success = 0;
-  if (await zohoAnalyticService.upsertWithdrawals(withdrawals)) {
+  if (await zohoAnalyticService.upsertWithdrawals(withSyncedAt(recordsToSync))) {
     await metadataService.upsertWithdrawal(
-      withdrawals[withdrawals.length - 1].lastUpdated
+      recordsToSync[recordsToSync.length - 1].lastUpdated
     );
-    success = withdrawals.length;
+
+    logger.info(
+      `Withdrawals: sync completed successfully. Records processed=${recordsToSync.length}`
+    );
+
+    return recordsToSync.length;
   }
 
-  return success;
+  return 0;
 };
 
 // Runs SyncWithdrawal() on the configured cron schedule

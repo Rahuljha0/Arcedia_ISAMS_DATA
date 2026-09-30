@@ -1,9 +1,11 @@
+import { withSyncedAt } from "../utils/syncStamp.js";
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { zohoCrmService } from "../services/zoho-crm.service.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
+import { getReconciliationResult } from "../utils/syncReconciliation.js";
 
 /**
  * SyncStudentForms
@@ -13,55 +15,88 @@ import { config } from "../config/env.js";
  * and upserts them into Zoho Analytics.
  */
 export const SyncStudentForms = async () => {
-  let allStudentForms = await zohoCrmService.getStudentForms();
+  // Fetch the complete source dataset for reconciliation.
+  const allStudentForms = await zohoCrmService.getStudentForms();
 
-  // Delete student forms from zoho analytics those are not in source
   const pk = config.zohoAnalyticApi.primaryKeys.studentForm;
-  const sourcePk = pk.toLowerCase();
-  const sourceIds = new Set(allStudentForms.map((a) => a[sourcePk]));
   const analytics = await zohoAnalyticService.exportStudentForms();
-  const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a[pk]))
-    .map((a) => a[pk]);
+  const analyticsData = analytics?.data || [];
+
+  const reconciliation = getReconciliationResult({
+    sourceData: allStudentForms.map((studentForm) => ({
+      ...studentForm,
+      ID: studentForm.id,
+    })),
+    analyticsData,
+    primaryKey: pk,
+  });
 
   logger.info(
-    `Student Forms: ${allStudentForms.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} student forms from Analytics`
+    `Student Forms reconciliation | Source=${reconciliation.sourceCount} | Analytics=${reconciliation.analyticsCount} | CountMismatch=${reconciliation.countMismatch} | KeyMismatch=${reconciliation.keyMismatch} | FullSync=${reconciliation.fullSync}`
   );
-  if (needToDelete.length > 0) {
-    const deleted = await zohoAnalyticService.deleteStudentForms(needToDelete);
-    logger.info(`Deleted ${deleted} student forms from Analytics`);
+
+  if (reconciliation.extraInAnalytics.length > 0) {
+    const deleted = await zohoAnalyticService.deleteStudentForms(
+      reconciliation.extraInAnalytics
+    );
+
+    logger.info(
+      `Student Forms: deleted ${deleted} records that no longer exist in source`
+    );
   }
 
-  // Keep only student forms updated after the last sync
-  const lastUpdated = await metadataService.getStudentFormLastUpdated();
-  let studentForms = await zohoCrmService.getStudentForms(lastUpdated);
+  let studentForms;
 
-  // If no new student forms to sync, return
+  if (reconciliation.fullSync) {
+    studentForms = [...allStudentForms];
+
+    logger.info(
+      `Student Forms: reconciliation mismatch detected. Performing FULL sync of ${studentForms.length} records.`
+    );
+  } else {
+    const lastUpdated = await metadataService.getStudentFormLastUpdated();
+
+    studentForms = allStudentForms.filter(
+      (studentForm) =>
+        new Date(studentForm.Modified_Time) > new Date(lastUpdated)
+    );
+
+    logger.info(
+      `Student Forms: source and Analytics are aligned. Performing incremental sync of ${studentForms.length} records.`
+    );
+  }
+
+  // FULL REFRESH every run
+  studentForms = [...allStudentForms];
   if (studentForms.length === 0) {
-    logger.info("No new student forms to sync");
+    logger.info("No student forms to sync");
     return 0;
   }
 
-  // prefix fullName (useful for testing/demo environments)
   if (config.zohoAnalyticApi.fullNamePrefix) {
-    studentForms = studentForms.map((studentForm) => {
-      studentForm.First_Name = `${config.zohoAnalyticApi.fullNamePrefix} ${studentForm.First_Name}`;
-      return studentForm;
-    });
+    studentForms = studentForms.map((studentForm) => ({
+      ...studentForm,
+      First_Name: `${config.zohoAnalyticApi.fullNamePrefix} ${studentForm.First_Name || ""}`.trim(),
+    }));
   }
 
-  logger.info(`Syncing ${studentForms.length} student forms...`);
+  logger.info(
+    `Student Forms: syncing ${studentForms.length} records using View ID ${config.zohoAnalyticApi.studentFormViewId} and primary key ${pk}`
+  );
 
-  // Upsert each student form into Zoho and update metadata
-  let success = 0;
-  if (await zohoAnalyticService.upsertStudentForms(studentForms)) {
+  if (await zohoAnalyticService.upsertStudentForms(withSyncedAt(studentForms))) {
     await metadataService.upsertStudentForm(
       studentForms[studentForms.length - 1].Modified_Time
     );
-    success = studentForms.length;
+
+    logger.info(
+      `Student Forms: sync completed successfully. Records processed=${studentForms.length}`
+    );
+
+    return studentForms.length;
   }
 
-  return success;
+  return 0;
 };
 
 // Runs SyncStudentForms() on the configured cron schedule

@@ -4,28 +4,55 @@ import logger from "../utils/logger.js";
 import FormData from "form-data";
 import dayjs from "dayjs";
 
+let cachedAccessToken = null;
+let accessTokenExpiresAt = 0;
+let accessTokenPromise = null;
+
+
 export const zohoAnalyticService = {
   /**
    * Common Functions
    */
   getAccessToken: async () => {
-    try {
-      const res = await http.post(config.zohoAnalyticApi.accessTokenUrl, null, {
-        params: {
-          client_id: config.zohoAnalyticApi.clientId,
-          client_secret: config.zohoAnalyticApi.clientSecret,
-          refresh_token: config.zohoAnalyticApi.refreshToken,
-          grant_type: "refresh_token",
-        },
-      });
-      return res.data.access_token;
-    } catch (err) {
-      logger.error(
-        "ZohoAnalyticService: Error getting access token:",
-        err.response?.data || err.message,
-      );
-      throw err;
+    if (cachedAccessToken && Date.now() < accessTokenExpiresAt) {
+      return cachedAccessToken;
     }
+
+    if (accessTokenPromise) {
+      return accessTokenPromise;
+    }
+
+    accessTokenPromise = (async () => {
+      try {
+        const res = await http.post(config.zohoAnalyticApi.accessTokenUrl, null, {
+          params: {
+            client_id: config.zohoAnalyticApi.clientId,
+            client_secret: config.zohoAnalyticApi.clientSecret,
+            refresh_token: config.zohoAnalyticApi.refreshToken,
+            grant_type: "refresh_token",
+          },
+        });
+
+        cachedAccessToken = res.data.access_token;
+
+        // Refresh 5 minutes before the token expires.
+        const expiresIn = Number(res.data.expires_in) || 3600;
+        accessTokenExpiresAt =
+          Date.now() + Math.max(expiresIn - 300, 300) * 1000;
+
+        return cachedAccessToken;
+      } catch (err) {
+        logger.error(
+          "ZohoAnalyticService: Error getting access token:",
+          err.response?.data || err.message
+        );
+        throw err;
+      } finally {
+        accessTokenPromise = null;
+      }
+    })();
+
+    return accessTokenPromise;
   },
 
   bulkDeleteRequest: async (viewId, token, criteria) => {
@@ -65,7 +92,32 @@ export const zohoAnalyticService = {
 
     const fullUrl = `https://analyticsapi.zoho.com/restapi/v2/workspaces/${config.zohoAnalyticApi.workspaceId}/views/${viewId}/data?CONFIG=${encodeURIComponent(JSON.stringify(configJson))}`;
 
-    return await http.post(fullUrl, formdata, { headers });
+    const maxAttempts = 10;
+    const retryDelayMs = 30000;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        return await http.post(fullUrl, formdata, { headers });
+      } catch (err) {
+        const errorData = err.response?.data;
+        const errorText = JSON.stringify(errorData || err.message || "");
+
+        const importInProgress =
+          errorText.includes("ZDB_CANOVERRIDEEXCEPTION") ||
+          errorText.includes("Another import is in progess") ||
+          errorText.includes("Another import is in progress");
+
+        if (!importInProgress || attempt === maxAttempts) {
+          throw err;
+        }
+
+        logger.warn(
+          `Zoho Analytics import already in progress. Waiting ${retryDelayMs / 1000}s before retry ${attempt + 1}/${maxAttempts}...`
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+      }
+    }
   },
 
   bulkExportRequest: async (viewId) => {
@@ -350,6 +402,7 @@ export const zohoAnalyticService = {
           : tour?.customer_more_info?.[
               "Does this child have siblings if so what year groups?"
             ] || null,
+        synced_at: tour?.synced_at || null,
       }));
 
       const response = await zohoAnalyticService.bulkUpsertRequest(

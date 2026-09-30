@@ -144,3 +144,13 @@ vite.config.ts.timestamp-*
 #vs code settings
 .DS_Store
 settings.json
+.env_bkp*
+backup_sync_*/
+*.before_*
+*.bak*
+*.backup*
+trial*.mjs
+cols.mjs
+check_col.mjs
+add_synced_at.mjs
+tour_count.mjs

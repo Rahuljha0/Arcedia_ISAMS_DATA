@@ -1,3 +1,4 @@
+import { withSyncedAt } from "../utils/syncStamp.js";
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { metadataService } from "../services/metadata.service.js";
@@ -20,31 +21,43 @@ export const SyncTours = async () => {
   });
 
   // Sort tours by lastUpdated (oldest → newest)
+  if (!Array.isArray(tours) || tours.length === 0) {
+    throw new Error("Tours: source returned no tours. Sync aborted, nothing deleted.");
+  }
   tours.sort(
     (a, b) => new Date(a.last_updated_time) - new Date(b.last_updated_time)
   );
 
   // Delete tours from zoho analytics those are not in source
   const pk = config.zohoAnalyticApi.primaryKeys.tour;
-  const sourceIds = new Set(tours.map((a) => a[pk]));
+  const sourceIds = new Set(tours.map((a) => String(a[pk])));
   const analytics = await zohoAnalyticService.exportTours();
   const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a[pk]))
+    .filter((a) => !sourceIds.has(String(a[pk])))
     .map((a) => a[pk]);
 
   logger.info(
     `Tours: ${tours.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} tours from Analytics`
   );
+  const deleteLimit = Math.max(50, analytics.data.length * 0.2);
+  if (needToDelete.length > deleteLimit && process.env.FORCE_DELETE !== "true") {
+    logger.error(`Tours: refusing to delete ${needToDelete.length} of ${analytics.data.length} records. Check the API result.`);
+    return 0;
+  }
   if (needToDelete.length > 0) {
     const deleted = await zohoAnalyticService.deleteTours(needToDelete);
     logger.info(`Deleted ${deleted} tours from Analytics`);
   }
 
   // Keep only tours updated after the last sync
-  const lastUpdated = await metadataService.getTourLastUpdated();
-  tours = tours.filter(
-    (tour) => new Date(tour.last_updated_time) > new Date(lastUpdated)
-  );
+  const analyticsIds = new Set(analytics.data.map((a) => String(a[pk])));
+  const missingInAnalytics = tours.filter((t) => !analyticsIds.has(String(t[pk]))).length;
+  if (missingInAnalytics > 0) {
+    logger.info(`Tours: ${missingInAnalytics} source tours missing in Analytics. FULL sync of ${tours.length} tours.`);
+  } else {
+    const lastUpdated = await metadataService.getTourLastUpdated();
+    // FULL REFRESH every run
+  }
 
   // If no new tours to sync, return
   if (tours.length === 0) {
@@ -64,7 +77,7 @@ export const SyncTours = async () => {
 
   // Upsert each tour into Zoho and update metadata
   let success = 0;
-  if (await zohoAnalyticService.upsertTours(tours)) {
+  if (await zohoAnalyticService.upsertTours(withSyncedAt(tours))) {
     await metadataService.upsertTour(tours[tours.length - 1].last_updated_time);
     success = tours.length;
   }

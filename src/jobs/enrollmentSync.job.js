@@ -1,100 +1,138 @@
+import { withSyncedAt } from "../utils/syncStamp.js";
 import cron from "node-cron";
 import logger from "../utils/logger.js";
 import { arcadiaApi } from "../services/arcadia.service.js";
 import { metadataService } from "../services/metadata.service.js";
 import { zohoAnalyticService } from "../services/zoho-analytic.service.js";
 import { config } from "../config/env.js";
+import { getReconciliationResult } from "../utils/syncReconciliation.js";
 
-/**
- * SyncStudents
- * ------------
- * Fetches student enrollment records from Arcadia API,
- * filters unsynced records based on `lastUpdated`,
- * and upserts them into Zoho Analytics.
- */
 export const SyncEnrollments = async () => {
   let page = 1;
-  let pageSize = 300;
+  const pageSize = 300;
   let students = [];
 
-  // Fetch students from Arcadia API in a paginated loop
   while (true) {
-    const params = { page, pageSize };
-    const response = await arcadiaApi.getEnrollmentStudents(params);
-    students = students.concat(response.students || []);
+    const response = await arcadiaApi.getEnrollmentStudents({
+      page,
+      pageSize,
+    });
+
+    students = students.concat(response?.students || []);
 
     if (
       !response?.totalPages ||
       !response?.students ||
-      page >= response?.totalPages
+      page >= Number(response.totalPages)
     ) {
       break;
     }
+
     page++;
   }
 
-  // Sort students by lastUpdated (oldest → newest)
-  students.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
+  students.sort(
+    (a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated)
+  );
 
-  // Delete students from zoho analytics those are not in source
   const pk = config.zohoAnalyticApi.primaryKeys.enrollment;
-  const sourceIds = new Set(students.map((a) => a[pk]));
+
   const analytics = await zohoAnalyticService.exportEnrollments();
-  const needToDelete = analytics.data
-    .filter((a) => !sourceIds.has(a[pk]))
-    .map((a) => a[pk]);
+  const analyticsData = analytics?.data || [];
+
+  const reconciliation = getReconciliationResult({
+    sourceData: students,
+    analyticsData,
+    primaryKey: pk,
+  });
 
   logger.info(
-    `Enrollments: ${students.length}, Analytics: ${analytics.data.length}, Deleting ${needToDelete.length} enrollments from Analytics`
+    `Enrollments reconciliation | Source=${reconciliation.sourceCount} | Analytics=${reconciliation.analyticsCount} | CountMismatch=${reconciliation.countMismatch} | KeyMismatch=${reconciliation.keyMismatch} | FullSync=${reconciliation.fullSync}`
   );
-  if (needToDelete.length > 0) {
-    const deleted = await zohoAnalyticService.deleteEnrollments(needToDelete);
-    logger.info(`Deleted ${deleted} enrollments from Analytics`);
+
+  if (reconciliation.extraInAnalytics.length > 0) {
+    const deleted = await zohoAnalyticService.deleteEnrollments(
+      reconciliation.extraInAnalytics
+    );
+
+    logger.info(
+      `Enrollments: deleted ${deleted} records that no longer exist in source`
+    );
   }
 
-  // Keep only students updated after the last sync
-  const lastUpdated = await metadataService.getEnrollmentLastUpdated();
-  students = students.filter(
-    (student) => new Date(student.lastUpdated) > new Date(lastUpdated)
-  );
+  let recordsToSync;
 
-  // If no new students to sync, return
-  if (students.length === 0) {
-    logger.info("No new enrollments to sync");
+  if (reconciliation.fullSync) {
+    recordsToSync = [...students];
+
+    logger.info(
+      `Enrollments: reconciliation mismatch detected. Performing FULL sync of ${recordsToSync.length} records.`
+    );
+  } else {
+    const lastUpdated = await metadataService.getEnrollmentLastUpdated();
+
+    recordsToSync = students.filter(
+      (student) =>
+        new Date(student.lastUpdated) > new Date(lastUpdated)
+    );
+
+    logger.info(
+      `Enrollments: source and Analytics are aligned. Performing incremental sync of ${recordsToSync.length} records.`
+    );
+  }
+
+  // FULL REFRESH every run
+  recordsToSync = [...students];
+  if (recordsToSync.length === 0) {
+    logger.info("No new or changed enrollments to sync");
     return 0;
   }
 
-  // prefix fullName (useful for testing/demo environments)
   if (config.zohoAnalyticApi.fullNamePrefix) {
-    students = students.map((student) => {
-      student.fullName = `${config.zohoAnalyticApi.fullNamePrefix} ${student.fullName}`;
-      return student;
-    });
+    recordsToSync = recordsToSync.map((student) => ({
+      ...student,
+      fullName: `${config.zohoAnalyticApi.fullNamePrefix} ${student.fullName}`,
+    }));
   }
 
-  logger.info(`Syncing ${students.length} enrollments...`);
+  logger.info(
+    `Enrollments: syncing ${recordsToSync.length} records using View ID ${config.zohoAnalyticApi.enrollmentViewId} and primary key ${pk}`
+  );
 
-  // Upsert each student into Zoho and update metadata
-  let success = 0;
-  if (await zohoAnalyticService.upsertEnrollments(students)) {
-    await metadataService.upsertEnrollment(
-      students[students.length - 1].lastUpdated
-    );
-    success = students.length;
+  const result = await zohoAnalyticService.upsertEnrollments(withSyncedAt(recordsToSync));
+
+  if (!result) {
+    logger.error("Enrollments: Zoho Analytics sync failed");
+    return 0;
   }
 
-  return success;
+  await metadataService.upsertEnrollment(
+    recordsToSync[recordsToSync.length - 1].lastUpdated
+  );
+
+  logger.info(
+    `Enrollments: sync completed successfully. Records processed=${recordsToSync.length}`
+  );
+
+  return recordsToSync.length;
 };
 
-// Runs SyncStudents() on the configured cron schedule
 export const startEnrollmentSyncJob = () => {
   logger.info(
     `Starting enrollment sync job with schedule: ${config.cronInterval.enrollment}`
   );
+
   cron.schedule(
     config.cronInterval.enrollment,
     async () => {
-      await SyncEnrollments();
+      try {
+        await SyncEnrollments();
+      } catch (error) {
+        logger.error(
+          "Enrollment sync job failed",
+          error.response?.data || error.message
+        );
+      }
     },
     {
       timezone: "Asia/Dubai",
